@@ -1,7 +1,13 @@
 import bcrypt from "bcryptjs";
 import type { Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { getCached, KEYS, setCached, TTL } from "../cache/userCache.ts";
+import {
+  getCached,
+  KEYS,
+  removeCached,
+  setCached,
+  TTL,
+} from "../cache/userCache.ts";
 import { dbEcommerce } from "../config/db.ts";
 
 interface Register {
@@ -151,4 +157,14 @@ const getProfile = async (
   }
 };
 
-export default { register, login, getProfile };
+const logout = async (req: Request<{ id: string }, {}, {}>, res: Response) => {
+  const id = req.userId;
+  if (!id) {
+    return res.status(401).json({ message: "user not found" });
+  }
+
+  await removeCached(KEYS.session(id));
+  return res.status(200).json({ message: "logout success" });
+};
+
+export default { register, login, getProfile, logout };
