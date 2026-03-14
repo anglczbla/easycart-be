@@ -14,101 +14,131 @@ interface Login {
   password: string;
 }
 
-async function register(req: Request<{}, {}, Register>, res: Response) {
-  const { username, email, password } = req.body;
+const register = async (req: Request<{}, {}, Register>, res: Response) => {
+  try {
+    const { username, email, password } = req.body;
 
-  if (!username) {
-    return res.status(400).json({ message: "username is required" });
-  }
-  if (!email) {
-    return res.status(400).json({ message: "invalid email" });
-  }
-  if (!password) {
-    return res.status(400).json({ message: "invalid password" });
-  }
+    if (!username) {
+      return res.status(400).json({ message: "username is required" });
+    }
+    if (!email) {
+      return res.status(400).json({ message: "invalid email" });
+    }
+    if (!password) {
+      return res.status(400).json({ message: "invalid password" });
+    }
 
-  const existingUser = await dbEcommerce.oneOrNone(
-    "SELECT * FROM users WHERE email = $1",
-    [email],
-  );
+    const existingUser = await dbEcommerce.oneOrNone(
+      "SELECT * FROM users WHERE email = $1",
+      [email],
+    );
 
-  if (existingUser) {
-    return res.status(400).json({ message: "email already registered" });
-  }
+    if (existingUser) {
+      return res.status(400).json({ message: "email already registered" });
+    }
 
-  const duplicateUsername = await dbEcommerce.oneOrNone(
-    "SELECT * FROM users WHERE username = $1",
-    [username],
-  );
+    const duplicateUsername = await dbEcommerce.oneOrNone(
+      "SELECT * FROM users WHERE username = $1",
+      [username],
+    );
 
-  if (duplicateUsername) {
-    return res.status(400).json({ message: "username already exist" });
-  }
+    if (duplicateUsername) {
+      return res.status(400).json({ message: "username already exist" });
+    }
 
-  const saltRounds = 10;
-  const hashedPassword = await bcrypt.hash(password, saltRounds);
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-  const newUser = await dbEcommerce.one(
-    "INSERT INTO users(username,email,password) VALUES ($1,$2,$3) RETURNING *",
-    [username, email, hashedPassword],
-  );
+    const newUser = await dbEcommerce.one(
+      "INSERT INTO users(username,email,password) VALUES ($1,$2,$3) RETURNING *",
+      [username, email, hashedPassword],
+    );
 
-  const token = jwt.sign(
-    { id: newUser.id, email: newUser.email },
-    process.env.JWT_SECRET as string,
-    { expiresIn: "1d" },
-  );
+    const token = jwt.sign(
+      { id: newUser.id, email: newUser.email },
+      process.env.JWT_SECRET as string,
+      { expiresIn: "1d" },
+    );
 
-  const newUserRegist = {
-    data: newUser,
-    token,
-  };
+    const newUserRegist = {
+      data: newUser,
+      token,
+    };
 
-  return res.status(201).json({
-    message: "success",
-    data: newUserRegist,
-  });
-}
-
-async function login(req: Request<{}, {}, Login>, res: Response) {
-  const { email, password } = req.body;
-
-  if (!email) {
-    return res.status(400).json({ message: "email is required" });
-  }
-
-  if (!password) {
-    return res.status(400).json({ message: "password is required" });
-  }
-
-  const findUser = await dbEcommerce.oneOrNone(
-    "SELECT * FROM users WHERE email = $1",
-    [email],
-  );
-
-  if (!findUser) {
-    return res.status(400).json({
-      message: "user doesnt exist",
+    return res.status(201).json({
+      message: "success",
+      data: newUserRegist,
     });
+  } catch (err) {
+    const error = err as Error;
+    res.status(500).json({ err: error.message });
   }
+};
 
-  const isMatch = await bcrypt.compare(password, findUser.password);
+const login = async (req: Request<{}, {}, Login>, res: Response) => {
+  try {
+    const { email, password } = req.body;
 
-  if (!isMatch) {
-    return res.status(401).json({ message: "wrong password" });
+    if (!email) {
+      return res.status(400).json({ message: "email is required" });
+    }
+
+    if (!password) {
+      return res.status(400).json({ message: "password is required" });
+    }
+
+    const findUser = await dbEcommerce.oneOrNone(
+      "SELECT * FROM users WHERE email = $1",
+      [email],
+    );
+
+    if (!findUser) {
+      return res.status(400).json({
+        message: "user doesnt exist",
+      });
+    }
+
+    const isMatch = await bcrypt.compare(password, findUser.password);
+
+    if (!isMatch) {
+      return res.status(401).json({ message: "wrong password" });
+    }
+
+    const token = jwt.sign(
+      { id: findUser.id, email: findUser.email },
+      process.env.JWT_SECRET as string,
+      { expiresIn: "1d" },
+    );
+
+    return res.status(200).json({
+      message: "success",
+      data: findUser,
+      token,
+    });
+  } catch (err) {
+    const error = err as Error;
+    res.status(500).json({ error: error.message });
   }
+};
 
-  const token = jwt.sign(
-    { id: findUser.id, email: findUser.email },
-    process.env.JWT_SECRET as string,
-    { expiresIn: "1d" },
-  );
+const getProfile = async (
+  req: Request<{ id: string }, {}, {}>,
+  res: Response,
+) => {
+  try {
+    const id = req.userId;
+    const getUser = await dbEcommerce.one("SELECT * FROM users where id=$1", [
+      id,
+    ]);
 
-  return res.status(200).json({
-    message: "success",
-    data: findUser,
-    token,
-  });
-}
+    return res.status(200).json({
+      message: "success",
+      data: getUser,
+    });
+  } catch (err) {
+    const error = err as Error;
+    res.status(500).json({ error: error.message });
+  }
+};
 
-export default { register, login };
+export default { register, login, getProfile };
