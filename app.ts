@@ -2,11 +2,16 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import { dbEcommerce } from "./config/db.ts";
+import { redisClient } from "./config/redis.ts";
 import authRoutes from "./routes/auth.ts";
 dotenv.config();
 
 const app = express();
 const port = 3000;
+
+redisClient.connect().then(() => {
+  console.log("Redis connected");
+});
 
 app.use(cors());
 app.use(express.json());

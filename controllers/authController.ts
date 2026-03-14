@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import type { Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import { KEYS, setCached, TTL } from "../cache/userCache.ts";
 import { dbEcommerce } from "../config/db.ts";
 
 interface Register {
@@ -109,6 +110,8 @@ const login = async (req: Request<{}, {}, Login>, res: Response) => {
       process.env.JWT_SECRET as string,
       { expiresIn: "1d" },
     );
+
+    await setCached(KEYS.all, findUser, TTL.all);
 
     return res.status(200).json({
       message: "success",

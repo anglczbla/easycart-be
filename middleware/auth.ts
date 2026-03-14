@@ -1,15 +1,13 @@
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import { KEYS } from "../cache/userCache.ts";
+import { redisClient } from "../config/redis.ts";
 
 interface JwtPayloadWithId extends jwt.JwtPayload {
   id: string;
 }
 
-const authUser = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
+const authUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
@@ -22,8 +20,18 @@ const authUser = async (
         message: "not authorized please login again",
       });
     }
-    const token_decode = jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayloadWithId;
+    const token_decode = jwt.verify(
+      token,
+      process.env.JWT_SECRET as string,
+    ) as JwtPayloadWithId;
     req.userId = token_decode.id;
+    const session = await redisClient.getCached(KEYS.byId(req.userId));
+
+    if (!session) {
+      return res.status(401).json({
+        message: "no session",
+      });
+    }
     next();
   } catch (error) {
     if (error instanceof Error) {
