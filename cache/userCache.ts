@@ -1,33 +1,24 @@
 import { redisClient } from "../config/redis.ts";
 
 const KEYS = {
-  all: "user:all",
-  byId: (id: string) => `product:${id}`,
+  session: (id: string) => `session:user:${id}`,
 };
 
 const TTL = {
-  all: 300,
-  byId: 600,
+  session: 24 * 60 * 60, // 1 day in seconds
 };
 
-async function getCached(key: any) {
+async function getCached(key: string) {
   const data = await redisClient.get(key);
   return data ? JSON.parse(data) : null;
 }
 
-async function setCached(key: any, data: any, ttl: number) {
+async function setCached(key: string, data: any, ttl: number) {
   await redisClient.set(key, JSON.stringify(data), { EX: ttl });
 }
 
-async function invalidateProduct(id: string) {
-  await Promise.all([
-    redisClient.del(KEYS.byId(id)),
-    redisClient.del(KEYS.all),
-  ]);
+async function removeCached(key: string) {
+  await redisClient.del(key);
 }
 
-async function invalidateAll() {
-  await redisClient.del(KEYS.all);
-}
-
-export { getCached, invalidateAll, invalidateProduct, KEYS, setCached, TTL };
+export { getCached, KEYS, removeCached, setCached, TTL };

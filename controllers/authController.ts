@@ -111,7 +111,7 @@ const login = async (req: Request<{}, {}, Login>, res: Response) => {
       { expiresIn: "1d" },
     );
 
-    await setCached(KEYS.all, findUser, TTL.all);
+    await setCached(KEYS.session(findUser.id), findUser, TTL.session);
 
     return res.status(200).json({
       message: "success",

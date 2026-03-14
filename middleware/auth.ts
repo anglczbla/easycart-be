@@ -1,7 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { KEYS } from "../cache/userCache.ts";
-import { redisClient } from "../config/redis.ts";
+import { getCached, KEYS } from "../cache/userCache.ts";
 
 interface JwtPayloadWithId extends jwt.JwtPayload {
   id: string;
@@ -24,12 +23,15 @@ const authUser = async (req: Request, res: Response, next: NextFunction) => {
       token,
       process.env.JWT_SECRET as string,
     ) as JwtPayloadWithId;
+
     req.userId = token_decode.id;
-    const session = await redisClient.getCached(KEYS.byId(req.userId));
+
+    const session = await getCached(KEYS.session(req.userId));
 
     if (!session) {
       return res.status(401).json({
-        message: "no session",
+        success: false,
+        message: "session expired or not found, please login again",
       });
     }
     next();
