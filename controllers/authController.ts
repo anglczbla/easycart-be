@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import type { Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { KEYS, setCached, TTL } from "../cache/userCache.ts";
+import { getCached, KEYS, setCached, TTL } from "../cache/userCache.ts";
 import { dbEcommerce } from "../config/db.ts";
 
 interface Register {
@@ -130,14 +130,21 @@ const getProfile = async (
 ) => {
   try {
     const id = req.userId;
+
+    if (!id) {
+      return res.status(401).json({ message: "unauthorized" });
+    }
+
+    const cached = await getCached(KEYS.session(id));
+
+    if (cached) {
+      return res.status(200).json({ data: cached });
+    }
+
     const getUser = await dbEcommerce.one("SELECT * FROM users where id=$1", [
       id,
     ]);
-
-    return res.status(200).json({
-      message: "success",
-      data: getUser,
-    });
+    return res.status(200).json({ data: getUser });
   } catch (err) {
     const error = err as Error;
     res.status(500).json({ error: error.message });
