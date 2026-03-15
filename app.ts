@@ -4,6 +4,7 @@ import express from "express";
 import { dbEcommerce } from "./config/db.ts";
 import { redisClient } from "./config/redis.ts";
 import authRoutes from "./routes/auth.ts";
+import productRoutes from "./routes/product.ts";
 dotenv.config();
 
 const app = express();
@@ -15,7 +16,8 @@ redisClient.connect().then(() => {
 
 app.use(cors());
 app.use(express.json());
-app.use("/api/ecommerce", authRoutes);
+app.use("/api/ecommerce/users", authRoutes);
+app.use("/api/ecommerce/products", productRoutes);
 
 app.listen(port, () => {
   console.log(`App listening at http://localhost:${port}`);

@@ -2,10 +2,14 @@ import { redisClient } from "../config/redis.ts";
 
 const KEYS = {
   session: (id: string) => `session:user:${id}`,
+  product: "products:all",
+  prodById: (id: string) => `product:${id}`,
 };
 
 const TTL = {
   session: 24 * 60 * 60, // 1 day in seconds
+  product: 300,
+  prodById: 600,
 };
 
 async function getCached(key: string) {
