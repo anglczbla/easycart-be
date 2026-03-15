@@ -157,8 +157,8 @@ const getProfile = async (
   }
 };
 
-const logout = async (req: Request<{ id: string }, {}, {}>, res: Response) => {
-  const id = req.userId;
+const logout = async (req: Request<{}, {}, { id: string }>, res: Response) => {
+  const { id } = req.body;
   if (!id) {
     return res.status(401).json({ message: "user not found" });
   }
