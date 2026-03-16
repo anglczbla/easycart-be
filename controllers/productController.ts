@@ -29,13 +29,48 @@ const getAllProducts = async (
         data: cached,
       });
     }
-    const getProduct = await dbEcommerce.many("SELECT * FROM products");
+
+    const getProduct = await dbEcommerce.query("SELECT * FROM products");
+
     await setCached(KEYS.product, getProduct, TTL.product);
     return res.status(201).json({
       message: "success",
       data: getProduct,
     });
   } catch (err) {
+    console.log(err);
+    const error = err as Error;
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const getProductById = async (
+  req: Request<{ id: string }, {}, {}>,
+  res: Response,
+) => {
+  try {
+    const { id } = req.params;
+    const cached = await getCached(KEYS.prodById(id));
+
+    if (cached) {
+      return res.status(200).json({
+        message: "success fetch product",
+        data: cached,
+      });
+    }
+
+    const getProduct = await dbEcommerce.query(
+      "SELECT * FROM products WHERE id = $1",
+      [id],
+    );
+
+    await setCached(KEYS.prodById(id), getProduct, TTL.prodById);
+    return res.status(201).json({
+      message: "success",
+      data: getProduct,
+    });
+  } catch (err) {
+    console.log(err);
     const error = err as Error;
     res.status(500).json({ error: error.message });
   }
@@ -125,4 +160,10 @@ const deleteProduct = async (
   });
 };
 
-export default { getAllProducts, addProducts, updateProduct, deleteProduct };
+export default {
+  getAllProducts,
+  getProductById,
+  addProducts,
+  updateProduct,
+  deleteProduct,
+};
