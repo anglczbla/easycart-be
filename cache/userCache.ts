@@ -4,12 +4,16 @@ const KEYS = {
   session: (id: string) => `session:user:${id}`,
   product: "products:all",
   prodById: (id: string) => `product:${id}`,
+  categories: "categories:all",
+  categoryById: (id: string) => `category:${id}`,
 };
 
 const TTL = {
   session: 24 * 60 * 60, // 1 day in seconds
   product: 300,
   prodById: 600,
+  categories: 300,
+  categoryById: 600,
 };
 
 async function getCached(key: string) {

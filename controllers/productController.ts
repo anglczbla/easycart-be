@@ -108,58 +108,68 @@ const updateProduct = async (
   req: Request<{ id: string }, {}, Products>,
   res: Response,
 ) => {
-  const { name, description, price, stock, category } = req.body;
-  const { id } = req.params;
+  try {
+    const { name, description, price, stock, category } = req.body;
+    const { id } = req.params;
 
-  const findProduct = await dbEcommerce.oneOrNone(
-    "SELECT * FROM products where id=$1",
-    [id],
-  );
+    const findProduct = await dbEcommerce.oneOrNone(
+      "SELECT * FROM products where id=$1",
+      [id],
+    );
 
-  if (!findProduct) {
-    return res.status(404).json({
-      message: "product not found",
+    if (!findProduct) {
+      return res.status(404).json({
+        message: "product not found",
+      });
+    }
+
+    const product = await dbEcommerce.one(
+      "UPDATE products SET name=$1, description=$2, price=$3, stock=$4, category =$5  WHERE id = $6 RETURNING*",
+      [name, description, price, stock, category, id],
+    );
+
+    await removeCached(KEYS.product);
+    await removeCached(KEYS.prodById(id));
+
+    return res.status(200).json({
+      message: "success update product",
+      data: product,
     });
+  } catch (err) {
+    const error = err as Error;
+    res.status(500).json({ err: error.message });
   }
-
-  const product = await dbEcommerce.one(
-    "UPDATE products SET name=$1, description=$2, price=$3, stock=$4, category =$5  WHERE id = $6 RETURNING*",
-    [name, description, price, stock, category, id],
-  );
-
-  await removeCached(KEYS.product);
-  await removeCached(KEYS.prodById(id));
-
-  return res.status(200).json({
-    message: "success update product",
-    data: product,
-  });
 };
 
 const deleteProduct = async (
   req: Request<{ id: string }, {}, Products>,
   res: Response,
 ) => {
-  const { id } = req.params;
+  try {
+    const { id } = req.params;
 
-  const product = await dbEcommerce.oneOrNone(
-    "DELETE FROM products WHERE id=$1 RETURNING*",
-    [id],
-  );
+    const product = await dbEcommerce.oneOrNone(
+      "DELETE FROM products WHERE id=$1 RETURNING*",
+      [id],
+    );
 
-  if (!product) {
-    return res.status(404).json({
-      message: "product not found",
+    if (!product) {
+      return res.status(404).json({
+        message: "product not found",
+      });
+    }
+
+    await removeCached(KEYS.product);
+    await removeCached(KEYS.prodById(id));
+
+    return res.status(200).json({
+      message: "success delete product",
+      data: product,
     });
+  } catch (err) {
+    const error = err as Error;
+    res.status(500).json({ err: error.message });
   }
-
-  await removeCached(KEYS.product);
-  await removeCached(KEYS.prodById(id));
-
-  return res.status(200).json({
-    message: "success delete product",
-    data: product,
-  });
 };
 
 export default {
