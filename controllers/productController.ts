@@ -59,7 +59,7 @@ const getProductById = async (
       });
     }
 
-    const getProduct = await dbEcommerce.query(
+    const getProduct = await dbEcommerce.oneOrNone(
       "SELECT * FROM products WHERE id = $1",
       [id],
     );
@@ -72,7 +72,9 @@ const getProductById = async (
   } catch (err) {
     console.log(err);
     const error = err as Error;
-    res.status(500).json({ error: error.message });
+    res
+      .status(500)
+      .json({ error: error.message, message: "product not found" });
   }
 };
 
