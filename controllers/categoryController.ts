@@ -24,7 +24,7 @@ const getAllCategories = async (
       });
     }
 
-    const categories = await dbEcommerce.query("SELECT * FROM category");
+    const categories = await dbEcommerce.query("SELECT * FROM categories");
     await setCached(KEYS.categories, categories, TTL.categories);
     return res.status(200).json({
       message: "success",
@@ -41,7 +41,7 @@ const addCategories = async (req: Request<{}, {}, Category>, res: Response) => {
     const { category } = req.body;
 
     const categories = await dbEcommerce.one(
-      "INSERT INTO category (category) VALUES ($1) RETURNING*",
+      "INSERT INTO categories (name) VALUES ($1) RETURNING*",
       [category],
     );
 
@@ -64,7 +64,7 @@ const deleteCategories = async (
     const { id } = req.params;
 
     const category = await dbEcommerce.oneOrNone(
-      "DELETE FROM category WHERE id=$1 RETURNING*",
+      "DELETE FROM categories WHERE id=$1 RETURNING*",
       [id],
     );
 
@@ -96,7 +96,7 @@ const updateCategory = async (
     const { id } = req.params;
 
     const findCategory = await dbEcommerce.oneOrNone(
-      "SELECT * FROM category WHERE id = $1",
+      "SELECT * FROM categories WHERE id = $1",
       [id],
     );
 
@@ -107,7 +107,7 @@ const updateCategory = async (
     }
 
     const categories = await dbEcommerce.one(
-      "UPDATE category SET category=$1 WHERE id=$2 RETURNING*",
+      "UPDATE categories SET name=$1 WHERE id=$2 RETURNING*",
       [category, id],
     );
 
