@@ -80,16 +80,16 @@ const getProductById = async (
 
 const addProducts = async (req: Request<{}, {}, Products>, res: Response) => {
   try {
-    const { name, description, price, stock } = req.body;
+    const { name, description, price, stock, category } = req.body;
 
-    if (!name || !description || !price || !stock) {
+    if (!name || !description || !price || !stock || !category) {
       return res.status(400).json({
         message: "all fields are required",
       });
     }
     const newProducts = await dbEcommerce.one(
-      "INSERT INTO products(name,description,price,stock) VALUES ($1,$2,$3,$4) RETURNING *",
-      [name, description, price, stock],
+      "INSERT INTO products(name,description,price,stock, category) VALUES ($1,$2,$3,$4, $5) RETURNING *",
+      [name, description, price, stock, category],
     );
 
     await removeCached(KEYS.product);
@@ -109,7 +109,7 @@ const updateProduct = async (
   res: Response,
 ) => {
   try {
-    const { name, description, price, stock } = req.body;
+    const { name, description, price, stock, category } = req.body;
     const { id } = req.params;
 
     const findProduct = await dbEcommerce.oneOrNone(
@@ -124,8 +124,8 @@ const updateProduct = async (
     }
 
     const product = await dbEcommerce.one(
-      "UPDATE products SET name=$1, description=$2, price=$3, stock=$4 WHERE id = $5 RETURNING*",
-      [name, description, price, stock, id],
+      "UPDATE products SET name=$1, description=$2, price=$3, stock=$4 category=$5 WHERE id =$6 RETURNING*",
+      [name, description, price, stock, category, id],
     );
 
     await removeCached(KEYS.product);
