@@ -97,6 +97,26 @@ const addToCart = async (
     }
 
     const { product_id } = req.body;
+
+    const productStock = await dbEcommerce.oneOrNone(
+      "SELECT stock FROM products WHERE id = $1",
+      [product_id],
+    );
+
+    if (!productStock) {
+      return res.status(400).json({
+        message: "product not found",
+        success: false,
+      });
+    }
+
+    if (productStock.stock <= 0) {
+      return res.status(400).json({
+        message: "out of stock",
+        success: false,
+      });
+    }
+
     const existingItem = await dbEcommerce.oneOrNone(
       "SELECT * FROM cart_items WHERE cart_id = $1 AND product_id = $2 LIMIT 1",
       [idCart.id, product_id],
@@ -114,6 +134,13 @@ const addToCart = async (
       );
     }
 
+    await dbEcommerce.none(
+      "UPDATE products SET stock = stock - 1 WHERE id = $1",
+      [product_id],
+    );
+
+    await removeCached(KEYS.product);
+    await removeCached(KEYS.prodById(product_id));
     await removeCached(KEYS.cart);
     await removeCached(KEYS.cartById(id));
 
