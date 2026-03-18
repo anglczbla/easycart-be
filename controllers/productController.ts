@@ -124,7 +124,7 @@ const updateProduct = async (
     }
 
     const product = await dbEcommerce.one(
-      "UPDATE products SET name=$1, description=$2, price=$3, stock=$4 category=$5 WHERE id =$6 RETURNING*",
+      "UPDATE products SET name=$1, description=$2, price=$3, stock=$4 ,category=$5 WHERE id =$6 RETURNING*",
       [name, description, price, stock, category, id],
     );
 
@@ -135,8 +135,9 @@ const updateProduct = async (
       message: "success update product",
       data: product,
     });
-  } catch (err) {
-    const error = err as Error;
+  } catch (error: any) {
+    // const error = err as Error;
+    console.error(error.response?.data);
     res.status(500).json({ err: error.message });
   }
 };
