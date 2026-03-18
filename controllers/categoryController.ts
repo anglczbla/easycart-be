@@ -9,7 +9,7 @@ import {
 import { dbEcommerce } from "../config/db.ts";
 
 interface Category {
-  category: string;
+  name: string;
 }
 const getAllCategories = async (
   req: Request<{}, {}, Category>,
@@ -38,11 +38,11 @@ const getAllCategories = async (
 
 const addCategories = async (req: Request<{}, {}, Category>, res: Response) => {
   try {
-    const { category } = req.body;
+    const { name } = req.body;
 
     const categories = await dbEcommerce.one(
       "INSERT INTO categories (name) VALUES ($1) RETURNING*",
-      [category],
+      [name],
     );
 
     await removeCached(KEYS.categories);
@@ -92,7 +92,7 @@ const updateCategory = async (
   res: Response,
 ) => {
   try {
-    const { category } = req.body;
+    const { name } = req.body;
     const { id } = req.params;
 
     const findCategory = await dbEcommerce.oneOrNone(
@@ -108,7 +108,7 @@ const updateCategory = async (
 
     const categories = await dbEcommerce.one(
       "UPDATE categories SET name=$1 WHERE id=$2 RETURNING*",
-      [category, id],
+      [name, id],
     );
 
     await removeCached(KEYS.categories);
