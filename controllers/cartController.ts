@@ -28,6 +28,7 @@ const getCartById = async (
     }
 
     const cached = await getCached(KEYS.cartById(id));
+    console.log("cached", cached);
     if (cached) {
       return res.status(200).json({
         message: "success fetch cart",
@@ -50,12 +51,14 @@ const getCartById = async (
     );
 
     if (!findCart || findCart.length === 0) {
-      return res.status(404).json({
-        message: "cart not found",
-        success: false,
+      return res.status(200).json({
+        message: "success fetch cart",
+        data: findCart ?? [],
       });
     }
+
     await setCached(KEYS.cartById(id), findCart, TTL.cartById);
+
     return res.status(200).json({
       message: "success fetch cart",
       data: findCart,
@@ -78,11 +81,12 @@ const addToCart = async (
     }
 
     const item = await dbEcommerce.oneOrNone(
-      "SELECT * FROM carts where user_id =  $1",
+      "SELECT * FROM carts where user_id = $1 LIMIT 1",
       [id],
     );
 
     let idCart;
+
     if (item == null) {
       idCart = await dbEcommerce.one(
         "INSERT INTO carts (user_id) VALUES ($1) RETURNING *",
@@ -92,11 +96,23 @@ const addToCart = async (
       idCart = item;
     }
 
-    const { product_id, quantity } = req.body;
-    const newProduct = await dbEcommerce.one(
-      "INSERT INTO cart_items (cart_id, product_id, quantity) VALUES ($1,$2,$3) RETURNING*",
-      [idCart.id, product_id, quantity],
+    const { product_id } = req.body;
+    const existingItem = await dbEcommerce.oneOrNone(
+      "SELECT * FROM cart_items WHERE cart_id = $1 AND product_id = $2 LIMIT 1",
+      [idCart.id, product_id],
     );
+
+    if (existingItem) {
+      await dbEcommerce.none(
+        "UPDATE cart_items SET quantity = quantity + 1 WHERE cart_id = $1 AND product_id = $2",
+        [idCart.id, product_id],
+      );
+    } else {
+      await dbEcommerce.one(
+        "INSERT INTO cart_items (cart_id, product_id, quantity) VALUES ($1,$2,$3) RETURNING *",
+        [idCart.id, product_id, 1],
+      );
+    }
 
     await removeCached(KEYS.cart);
     await removeCached(KEYS.cartById(id));
@@ -104,7 +120,6 @@ const addToCart = async (
     return res.status(201).json({
       message: "success add product",
       success: true,
-      data: newProduct,
     });
   } catch (err) {
     const error = err as Error;
@@ -119,18 +134,29 @@ const updateCartQty = async (
   try {
     const { id } = req.params;
     const { quantity, product_id } = req.body;
+    const userId = req.userId;
 
-    const cart = await dbEcommerce.one(
-      "UPDATE cart_items SET quantity=$1 WHERE cart_id=$2 AND product_id=$3 RETURNING*",
+    if (!userId) {
+      return res.status(401).json({ message: "unauthorized" });
+    }
+
+    const cart = await dbEcommerce.any(
+      "UPDATE cart_items SET quantity=$1 WHERE cart_id=$2 AND product_id=$3 RETURNING *",
       [quantity, id, product_id],
     );
 
+    if (cart.length === 0) {
+      return res.status(404).json({
+        message: "cart item not found",
+      });
+    }
+
     await removeCached(KEYS.cart);
-    await removeCached(KEYS.cartById(id));
+    await removeCached(KEYS.cartById(userId));
 
     return res.status(200).json({
       message: "success update cart",
-      data: cart,
+      data: cart[0],
     });
   } catch (err) {
     const error = err as Error;
@@ -143,24 +169,30 @@ const deleteCart = async (
   res: Response,
 ) => {
   try {
+    const userId = req.userId;
+    if (!userId) {
+      return res.status(401).json({ message: "unauthorized" });
+    }
+
     const { id } = req.params;
     const { product_id } = req.body;
-    const cart = await dbEcommerce.oneOrNone(
-      "DELETE FROM cart_items WHERE cart_id = $1 AND product_id=$2 RETURNING*",
+    const cart = await dbEcommerce.any(
+      "DELETE FROM cart_items WHERE cart_id = $1 AND product_id=$2 RETURNING *",
       [id, product_id],
     );
-    if (!cart) {
+
+    if (cart.length === 0) {
       return res.status(404).json({
         message: "cart not found",
       });
     }
 
     await removeCached(KEYS.cart);
-    await removeCached(KEYS.cartById(id));
+    await removeCached(KEYS.cartById(userId));
 
     return res.status(200).json({
       message: "success delete product",
-      data: cart,
+      data: cart[0],
     });
   } catch (err) {
     const error = err as Error;
