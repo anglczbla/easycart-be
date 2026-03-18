@@ -4,6 +4,7 @@ import express from "express";
 import { dbEcommerce } from "./config/db.ts";
 import { redisClient } from "./config/redis.ts";
 import authRoutes from "./routes/auth.ts";
+import cartRoutes from "./routes/cart.ts";
 import categoryRoutes from "./routes/category.ts";
 import productRoutes from "./routes/product.ts";
 dotenv.config();
@@ -20,6 +21,7 @@ app.use(express.json());
 app.use("/api/ecommerce/users", authRoutes);
 app.use("/api/ecommerce/products", productRoutes);
 app.use("/api/ecommerce/category", categoryRoutes);
+app.use("/api/ecommerce/cart", cartRoutes);
 
 app.listen(port, () => {
   console.log(`App listening at http://localhost:${port}`);

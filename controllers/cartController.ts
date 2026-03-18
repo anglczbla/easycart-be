@@ -112,6 +112,32 @@ const addToCart = async (
   }
 };
 
+const updateCartQty = async (
+  req: Request<{ id: string }, {}, Cart>,
+  res: Response,
+) => {
+  try {
+    const { id } = req.params;
+    const { quantity, product_id } = req.body;
+
+    const cart = await dbEcommerce.one(
+      "UPDATE cart_items SET quantity=$1 WHERE cart_id=$2 AND product_id=$3 RETURNING*",
+      [quantity, id, product_id],
+    );
+
+    await removeCached(KEYS.cart);
+    await removeCached(KEYS.cartById(id));
+
+    return res.status(200).json({
+      message: "success update cart",
+      data: cart,
+    });
+  } catch (err) {
+    const error = err as Error;
+    res.status(500).json({ err: error.message });
+  }
+};
+
 const deleteCart = async (
   req: Request<{ id: string }, {}, Cart>,
   res: Response,
@@ -134,32 +160,6 @@ const deleteCart = async (
 
     return res.status(200).json({
       message: "success delete product",
-      data: cart,
-    });
-  } catch (err) {
-    const error = err as Error;
-    res.status(500).json({ err: error.message });
-  }
-};
-
-const updateCartQty = async (
-  req: Request<{ id: string }, {}, Cart>,
-  res: Response,
-) => {
-  try {
-    const { id } = req.params;
-    const { quantity, product_id } = req.body;
-
-    const cart = await dbEcommerce.one(
-      "UPDATE cart_items SET quantity=$1 WHERE cart_id=$2 AND product_id=$3 RETURNING*",
-      [quantity, id, product_id],
-    );
-
-    await removeCached(KEYS.cart);
-    await removeCached(KEYS.cartById(id));
-
-    return res.status(200).json({
-      message: "success update cart",
       data: cart,
     });
   } catch (err) {
