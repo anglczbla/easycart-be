@@ -1,5 +1,4 @@
 import cors from "cors";
-import dotenv from "dotenv";
 import express from "express";
 import { dbEcommerce } from "./config/db.ts";
 import { redisClient } from "./config/redis.ts";
@@ -7,7 +6,7 @@ import authRoutes from "./routes/auth.ts";
 import cartRoutes from "./routes/cart.ts";
 import categoryRoutes from "./routes/category.ts";
 import productRoutes from "./routes/product.ts";
-dotenv.config();
+import userRoute from "./routes/user.ts";
 
 const app = express();
 const port = 3000;
@@ -18,7 +17,8 @@ redisClient.connect().then(() => {
 
 app.use(cors());
 app.use(express.json());
-app.use("/api/ecommerce/users", authRoutes);
+app.use("/api/ecommerce/auth", authRoutes);
+app.use("/api/ecommerce/users", userRoute);
 app.use("/api/ecommerce/products", productRoutes);
 app.use("/api/ecommerce/category", categoryRoutes);
 app.use("/api/ecommerce/cart", cartRoutes);

@@ -12,6 +12,7 @@ const authUser = async (req: Request, res: Response, next: NextFunction) => {
     if (!authHeader) {
       return res.status(401).json({ success: false, message: "no token" });
     }
+
     const token = authHeader.split(" ")[1];
     if (!token) {
       return res.status(403).json({

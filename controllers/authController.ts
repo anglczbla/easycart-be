@@ -1,13 +1,7 @@
 import bcrypt from "bcryptjs";
 import type { Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import {
-  getCached,
-  KEYS,
-  removeCached,
-  setCached,
-  TTL,
-} from "../cache/userCache.ts";
+import { KEYS, removeCached, setCached, TTL } from "../cache/userCache.ts";
 import { dbEcommerce } from "../config/db.ts";
 
 interface Register {
@@ -130,33 +124,6 @@ const login = async (req: Request<{}, {}, Login>, res: Response) => {
   }
 };
 
-const getProfile = async (
-  req: Request<{ id: string }, {}, {}>,
-  res: Response,
-) => {
-  try {
-    const id = req.userId;
-
-    if (!id) {
-      return res.status(401).json({ message: "unauthorized" });
-    }
-
-    const cached = await getCached(KEYS.session(id));
-
-    if (cached) {
-      return res.status(200).json({ data: cached });
-    }
-
-    const getUser = await dbEcommerce.one("SELECT * FROM users where id=$1", [
-      id,
-    ]);
-    return res.status(200).json({ data: getUser });
-  } catch (err) {
-    const error = err as Error;
-    res.status(500).json({ error: error.message });
-  }
-};
-
 const logout = async (req: Request<{}, {}, { id: string }>, res: Response) => {
   const { id } = req.body;
   if (!id) {
@@ -167,4 +134,4 @@ const logout = async (req: Request<{}, {}, { id: string }>, res: Response) => {
   return res.status(200).json({ message: "logout success" });
 };
 
-export default { register, login, getProfile, logout };
+export default { register, login, logout };

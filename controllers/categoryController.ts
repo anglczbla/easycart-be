@@ -11,6 +11,7 @@ import { dbEcommerce } from "../config/db.ts";
 interface Category {
   name: string;
 }
+
 const getAllCategories = async (
   req: Request<{}, {}, Category>,
   res: Response,

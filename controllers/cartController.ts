@@ -141,7 +141,6 @@ const addToCart = async (
 
     await removeCached(KEYS.product);
     await removeCached(KEYS.prodById(product_id));
-    await removeCached(KEYS.cart);
     await removeCached(KEYS.cartById(id));
 
     return res.status(201).json({
@@ -178,7 +177,6 @@ const updateCartQty = async (
       });
     }
 
-    await removeCached(KEYS.cart);
     await removeCached(KEYS.cartById(userId));
 
     return res.status(200).json({
@@ -214,7 +212,6 @@ const deleteCart = async (
       });
     }
 
-    await removeCached(KEYS.cart);
     await removeCached(KEYS.cartById(userId));
 
     return res.status(200).json({

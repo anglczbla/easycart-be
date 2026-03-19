@@ -6,7 +6,7 @@ const KEYS = {
   prodById: (id: string) => `product:${id}`,
   categories: "categories:all",
   categoryById: (id: string) => `category:${id}`,
-  cart: "carts:all",
+
   cartById: (id: string) => `carts:${id}`,
 };
 
@@ -16,7 +16,6 @@ const TTL = {
   prodById: 600,
   categories: 300,
   categoryById: 600,
-  cart: 300,
   cartById: 600,
 };
 
