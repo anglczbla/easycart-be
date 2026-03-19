@@ -124,9 +124,37 @@ const updateCategory = async (
   }
 };
 
+const filterCategory = async (
+  req: Request<{}, {}, { category: string }>,
+  res: Response,
+) => {
+  try {
+    const { category } = req.query;
+    const findCategory = await dbEcommerce.any(
+      "SELECT FROM categories WHERE name ILIKE =$1",
+      [`%${category}%`],
+    );
+
+    if (!findCategory) {
+      return res.status(404).json({
+        message: "category not found",
+      });
+    }
+
+    return res.status(200).json({
+      message: "success",
+      product: findCategory,
+    });
+  } catch (err) {
+    const error = err as Error;
+    res.status(500).json({ err: error.message });
+  }
+};
+
 export default {
   getAllCategories,
   addCategories,
   deleteCategories,
   updateCategory,
+  filterCategory,
 };
