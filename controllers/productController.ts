@@ -173,10 +173,38 @@ const deleteProduct = async (
   }
 };
 
+const searchProduct = async (
+  req: Request<{}, {}, { product: string }>,
+  res: Response,
+) => {
+  try {
+    const { product } = req.query;
+    const findProduct = await dbEcommerce.any(
+      "SELECT FROM products WHERE name ILIKE =$1",
+      [`%${product}%`],
+    );
+
+    if (!findProduct) {
+      return res.status(404).json({
+        message: "product not found",
+      });
+    }
+
+    return res.status(200).json({
+      message: "success",
+      product: findProduct,
+    });
+  } catch (err) {
+    const error = err as Error;
+    res.status(500).json({ err: error.message });
+  }
+};
+
 export default {
   getAllProducts,
   getProductById,
   addProducts,
   updateProduct,
   deleteProduct,
+  searchProduct,
 };

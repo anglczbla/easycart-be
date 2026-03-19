@@ -30,23 +30,16 @@ const register = async (req: Request<{}, {}, Register>, res: Response) => {
     }
 
     const existingUser = await dbEcommerce.oneOrNone(
-      "SELECT * FROM users WHERE email = $1",
-      [email],
+      "SELECT * FROM users WHERE email = $1 OR username = $2",
+      [email, username],
     );
 
-    if (existingUser) {
+    if (existingUser?.email === email) {
       return res.status(400).json({ message: "email already registered" });
     }
-
-    const duplicateUsername = await dbEcommerce.oneOrNone(
-      "SELECT * FROM users WHERE username = $1",
-      [username],
-    );
-
-    if (duplicateUsername) {
+    if (existingUser?.username === username) {
       return res.status(400).json({ message: "username already exist" });
     }
-
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 

@@ -96,7 +96,7 @@ const addToCart = async (
       idCart = item;
     }
 
-    const { product_id } = req.body;
+    const { product_id, quantity } = req.body;
 
     const productStock = await dbEcommerce.oneOrNone(
       "SELECT stock FROM products WHERE id = $1",
@@ -123,9 +123,10 @@ const addToCart = async (
     );
 
     if (existingItem) {
+      const newQty = existingItem.quantity + quantity;
       await dbEcommerce.none(
-        "UPDATE cart_items SET quantity = quantity + 1 WHERE cart_id = $1 AND product_id = $2",
-        [idCart.id, product_id],
+        "UPDATE cart_items SET quantity = $1 WHERE cart_id = $2 AND product_id = $3",
+        [newQty, idCart.id, product_id],
       );
     } else {
       await dbEcommerce.one(
@@ -134,10 +135,12 @@ const addToCart = async (
       );
     }
 
-    await dbEcommerce.none(
-      "UPDATE products SET stock = stock - 1 WHERE id = $1",
-      [product_id],
-    );
+    const newStock = productStock.stock - 1;
+
+    await dbEcommerce.none("UPDATE products SET stock = $1 WHERE id = $2", [
+      newStock,
+      product_id,
+    ]);
 
     await removeCached(KEYS.product);
     await removeCached(KEYS.prodById(product_id));
