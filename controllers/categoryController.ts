@@ -131,7 +131,7 @@ const filterCategory = async (
   try {
     const { category } = req.query;
     const findCategory = await dbEcommerce.any(
-      "SELECT FROM categories WHERE name ILIKE =$1",
+      "SELECT FROM categories WHERE name ILIKE $1",
       [`%${category}%`],
     );
 

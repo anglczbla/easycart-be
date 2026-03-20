@@ -180,7 +180,7 @@ const searchProduct = async (
   try {
     const { product } = req.query;
     const findProduct = await dbEcommerce.any(
-      "SELECT FROM products WHERE name ILIKE =$1",
+      "SELECT * FROM products WHERE name ILIKE $1",
       [`%${product}%`],
     );
 
