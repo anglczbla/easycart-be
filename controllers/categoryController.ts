@@ -143,7 +143,7 @@ const filterCategory = async (
 
     return res.status(200).json({
       message: "success",
-      product: findCategory,
+      category: findCategory,
     });
   } catch (err) {
     const error = err as Error;
