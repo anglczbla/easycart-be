@@ -48,6 +48,18 @@ const addCategories = async (req: Request<{}, {}, Category>, res: Response) => {
   try {
     const { name } = req.body;
 
+    const duplicateName = await dbEcommerce.oneOrNone(
+      "SELECT * FROM categories WHERE name = $1",
+      [name],
+    );
+
+    if (duplicateName) {
+      return res.status(400).json({
+        message: "category already exist",
+        success: false,
+      });
+    }
+
     const categories = await dbEcommerce.one(
       "INSERT INTO categories (name) VALUES ($1) RETURNING*",
       [name],
@@ -111,6 +123,18 @@ const updateCategory = async (
     if (!findCategory) {
       return res.status(404).json({
         message: "category not found",
+      });
+    }
+
+    const duplicateName = await dbEcommerce.oneOrNone(
+      "SELECT * FROM categories WHERE name = $1",
+      [name],
+    );
+
+    if (duplicateName && duplicateName.id !== id) {
+      return res.status(400).json({
+        message: "category already exist",
+        success: false,
       });
     }
 
