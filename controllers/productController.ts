@@ -9,6 +9,7 @@ import {
 import { dbEcommerce } from "../config/db.ts";
 
 interface Products {
+  id: string;
   name: string;
   description: string;
   price: number;
@@ -32,10 +33,19 @@ const getAllProducts = async (
 
     const getProduct = await dbEcommerce.query("SELECT * FROM products");
 
-    await setCached(KEYS.product, getProduct, TTL.product);
+    const result = getProduct.map((p: Products) => ({
+      id: p.id,
+      name: p.name,
+      description: p.description,
+      price: p.price,
+      stock: p.stock,
+      category: p.category,
+    }));
+
+    await setCached(KEYS.product, result, TTL.product);
     return res.status(201).json({
       message: "success",
-      data: getProduct,
+      data: result,
     });
   } catch (err) {
     console.log(err);
@@ -64,10 +74,19 @@ const getProductById = async (
       [id],
     );
 
-    await setCached(KEYS.prodById(id), getProduct, TTL.prodById);
+    const result = {
+      id: getProduct.id,
+      name: getProduct.name,
+      description: getProduct.description,
+      price: getProduct.price,
+      stock: getProduct.stock,
+      category: getProduct.category,
+    };
+
+    await setCached(KEYS.prodById(id), result, TTL.prodById);
     return res.status(201).json({
       message: "success",
-      data: getProduct,
+      data: result,
     });
   } catch (err) {
     console.log(err);
@@ -136,7 +155,6 @@ const updateProduct = async (
       data: product,
     });
   } catch (error: any) {
-    // const error = err as Error;
     console.error(error.response?.data);
     res.status(500).json({ err: error.message });
   }
@@ -180,7 +198,7 @@ const searchProduct = async (
   try {
     const { product, category } = req.query;
     const findProduct = await dbEcommerce.any(
-      "SELECT * FROM products WHERE name ILIKE $1 AND category  ILIKE $2",
+      "SELECT * FROM products WHERE name ILIKE $1 AND category ILIKE $2",
       [`%${product}%`, `%${category}%`],
     );
 
@@ -190,9 +208,18 @@ const searchProduct = async (
       });
     }
 
+    const result = findProduct.map((p) => ({
+      id: p.id,
+      name: p.name,
+      description: p.description,
+      price: p.price,
+      stock: p.stock,
+      category: p.category,
+    }));
+
     return res.status(200).json({
       message: "success",
-      product: findProduct,
+      product: result,
     });
   } catch (err) {
     const error = err as Error;

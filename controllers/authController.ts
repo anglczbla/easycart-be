@@ -15,6 +15,16 @@ interface Login {
   password: string;
 }
 
+interface User {
+  id: string;
+  email: string;
+  username: string;
+  phone: string;
+  address: string;
+  city: string;
+  avatar?: string;
+}
+
 const register = async (req: Request<{}, {}, Register>, res: Response) => {
   try {
     const { username, email, password } = req.body;
@@ -48,6 +58,16 @@ const register = async (req: Request<{}, {}, Register>, res: Response) => {
       [username, email, hashedPassword],
     );
 
+    const user = newUser.map((user: User) => ({
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      phone: user.phone,
+      address: user.address,
+      city: user.city,
+      avatar: user.avatar,
+    }));
+
     const token = jwt.sign(
       { id: newUser.id, email: newUser.email },
       process.env.JWT_SECRET as string,
@@ -55,7 +75,7 @@ const register = async (req: Request<{}, {}, Register>, res: Response) => {
     );
 
     const newUserRegist = {
-      data: newUser,
+      data: user,
       token,
     };
 

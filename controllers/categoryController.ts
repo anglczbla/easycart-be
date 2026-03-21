@@ -9,6 +9,7 @@ import {
 import { dbEcommerce } from "../config/db.ts";
 
 interface Category {
+  id: string;
   name: string;
 }
 
@@ -26,10 +27,16 @@ const getAllCategories = async (
     }
 
     const categories = await dbEcommerce.query("SELECT * FROM categories");
-    await setCached(KEYS.categories, categories, TTL.categories);
+
+    const result = categories.map((c: Category) => ({
+      id: c.id,
+      name: c.name,
+    }));
+
+    await setCached(KEYS.categories, result, TTL.categories);
     return res.status(200).json({
       message: "success",
-      data: categories,
+      data: result,
     });
   } catch (err) {
     const error = err as Error;
@@ -112,11 +119,16 @@ const updateCategory = async (
       [name, id],
     );
 
+    const result = {
+      id: categories.id,
+      name: categories.name,
+    };
+
     await removeCached(KEYS.categories);
     await removeCached(KEYS.categoryById(id));
     return res.status(200).json({
       message: "success update category",
-      data: categories,
+      data: result,
     });
   } catch (err) {
     const error = err as Error;
@@ -131,7 +143,7 @@ const filterCategory = async (
   try {
     const { category } = req.query;
     const findCategory = await dbEcommerce.any(
-      "SELECT FROM categories WHERE name ILIKE $1",
+      "SELECT * FROM categories WHERE name ILIKE $1",
       [`%${category}%`],
     );
 
@@ -141,9 +153,14 @@ const filterCategory = async (
       });
     }
 
+    const result = findCategory.map((c: Category) => ({
+      id: c.id,
+      name: c.name,
+    }));
+
     return res.status(200).json({
       message: "success",
-      category: findCategory,
+      category: result,
     });
   } catch (err) {
     const error = err as Error;
