@@ -1,5 +1,11 @@
 import type { Request, Response } from "express";
-import { getCached, KEYS, removeCached } from "../cache/userCache.ts";
+import {
+  getCached,
+  KEYS,
+  removeCached,
+  setCached,
+  TTL,
+} from "../cache/userCache.ts";
 import { dbEcommerce } from "../config/db.ts";
 
 interface Users {
@@ -23,16 +29,32 @@ const getProfile = async (
       return res.status(401).json({ message: "unauthorized" });
     }
 
-    const cached = await getCached(KEYS.session(id));
+    const cached = await getCached(KEYS.userById(id));
 
     if (cached) {
       return res.status(200).json({ data: cached });
     }
 
-    const getUser = await dbEcommerce.one("SELECT * FROM users where id=$1", [
-      id,
-    ]);
-    return res.status(200).json({ data: getUser });
+    const getUser = await dbEcommerce.oneOrNone(
+      "SELECT * FROM users where id=$1",
+      [id],
+    );
+
+    if (!getUser) {
+      return res.status(404).json({ message: "user not found" });
+    }
+
+    const result = {
+      email: getUser.email,
+      username: getUser.username,
+      phone: getUser.phone,
+      address: getUser.address,
+      city: getUser.city,
+      avatar: getUser.avatar,
+    };
+
+    await setCached(KEYS.userById(id), result, TTL.userById);
+    return res.status(200).json({ data: result });
   } catch (err) {
     const error = err as Error;
     res.status(500).json({ error: error.message });
@@ -50,29 +72,20 @@ const updateProfile = async (
       return res.status(401).json({ message: "unauthorized" });
     }
 
-    const { email, username, password, phone, address, city, avatar } =
-      req.body;
+    const { email, username, phone, address, city, avatar } = req.body;
 
-    if (
-      !email ||
-      !username ||
-      !password ||
-      !phone ||
-      !address ||
-      !city ||
-      !avatar
-    ) {
+    if (!email || !username || !phone || !address || !city || !avatar) {
       return res.status(400).json({
         message: "all fields are required",
       });
     }
 
     const newProfile = await dbEcommerce.one(
-      "UPDATE users (email, username, password, phone,address, city, avatar) SET VALUES ($1,$2,$3,$4,$5,$6,$7) WHERE id =$8 RETURNING *",
-      [email, username, password, phone, address, city, avatar, id],
+      "UPDATE users SET email=$1, username=$2, phone=$3, address=$4, city=$5, avatar=$6 WHERE id=$7 RETURNING *",
+      [email, username, phone, address, city, avatar, id],
     );
 
-    await removeCached(KEYS.session(id));
+    await removeCached(KEYS.userById(id));
     return res.status(201).json({
       message: "success add product",
       data: newProfile,

@@ -6,8 +6,8 @@ const KEYS = {
   prodById: (id: string) => `product:${id}`,
   categories: "categories:all",
   categoryById: (id: string) => `category:${id}`,
-
   cartById: (id: string) => `carts:${id}`,
+  userById: (id: string) => `user:${id}`,
 };
 
 const TTL = {
@@ -17,6 +17,7 @@ const TTL = {
   categories: 300,
   categoryById: 600,
   cartById: 600,
+  userById: 600,
 };
 
 async function getCached(key: string) {
