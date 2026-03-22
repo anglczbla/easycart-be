@@ -9,6 +9,7 @@ import {
 import { dbEcommerce } from "../config/db.ts";
 
 interface Users {
+  id: string;
   email: string;
   username: string;
   password: string;
@@ -45,6 +46,7 @@ const getProfile = async (
     }
 
     const result = {
+      id: getUser.id,
       email: getUser.email,
       username: getUser.username,
       phone: getUser.phone,
@@ -85,10 +87,20 @@ const updateProfile = async (
       [email, username, phone, address, city, avatar, id],
     );
 
+    const result = {
+      id: newProfile.id,
+      email: newProfile.email,
+      username: newProfile.username,
+      phone: newProfile.newProfilehone,
+      address: newProfile.address,
+      city: newProfile.city,
+      avatar: newProfile.avatar,
+    };
+
     await removeCached(KEYS.userById(id));
     return res.status(201).json({
-      message: "success add product",
-      data: newProfile,
+      message: "success update profile",
+      data: result,
     });
   } catch (err) {
     const error = err as Error;
