@@ -76,12 +76,6 @@ const updateProfile = async (
 
     const { email, username, phone, address, city, avatar } = req.body;
 
-    if (!email || !username || !phone || !address || !city || !avatar) {
-      return res.status(400).json({
-        message: "all fields are required",
-      });
-    }
-
     const newProfile = await dbEcommerce.one(
       "UPDATE users SET email=$1, username=$2, phone=$3, address=$4, city=$5, avatar=$6 WHERE id=$7 RETURNING *",
       [email, username, phone, address, city, avatar, id],
