@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { NextFunction, Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import { dbEcommerce } from "../../config/db.ts";
 
 const validateUsername = (username: string): string | null => {
@@ -57,7 +57,7 @@ export const validateRegister = async (
 
     next();
   } catch (error) {
-    return res.status(500).json({ message: "server error" });
+    return res.status(500).json({ message: "Server error during validation" });
   }
 };
 
@@ -97,6 +97,6 @@ export const validateLogin = async (
     req.user = findUser;
     next();
   } catch (error) {
-    return res.status(500).json({ message: "server error" });
+    return res.status(500).json({ message: "Server error during validation" });
   }
 };
