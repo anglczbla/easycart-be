@@ -47,19 +47,6 @@ const getAllCategories = async (
 const addCategories = async (req: Request<{}, {}, Category>, res: Response) => {
   try {
     const { name } = req.body;
-
-    const duplicateName = await dbEcommerce.oneOrNone(
-      "SELECT * FROM categories WHERE name = $1",
-      [name],
-    );
-
-    if (duplicateName) {
-      return res.status(400).json({
-        message: "category already exist",
-        success: false,
-      });
-    }
-
     const categories = await dbEcommerce.one(
       "INSERT INTO categories (name) VALUES ($1) RETURNING*",
       [name],
@@ -115,29 +102,6 @@ const updateCategory = async (
     const { name } = req.body;
     const { id } = req.params;
 
-    const findCategory = await dbEcommerce.oneOrNone(
-      "SELECT * FROM categories WHERE id = $1",
-      [id],
-    );
-
-    if (!findCategory) {
-      return res.status(404).json({
-        message: "category not found",
-      });
-    }
-
-    const duplicateName = await dbEcommerce.oneOrNone(
-      "SELECT * FROM categories WHERE name = $1",
-      [name],
-    );
-
-    if (duplicateName && duplicateName.id !== id) {
-      return res.status(400).json({
-        message: "category already exist",
-        success: false,
-      });
-    }
-
     const categories = await dbEcommerce.one(
       "UPDATE categories SET name=$1 WHERE id=$2 RETURNING*",
       [name, id],
@@ -161,12 +125,12 @@ const updateCategory = async (
 };
 
 const filterCategory = async (
-  req: Request<{}, {}, { category: string }>,
+  req: Request<{}, {}, {}, { category: string }>,
   res: Response,
 ) => {
   try {
     const { category } = req.query;
-    const findCategory = await dbEcommerce.any(
+    const findCategory = await dbEcommerce.oneOrNone(
       "SELECT * FROM categories WHERE name ILIKE $1",
       [`%${category}%`],
     );
