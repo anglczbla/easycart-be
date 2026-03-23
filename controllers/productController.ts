@@ -101,11 +101,6 @@ const addProducts = async (req: Request<{}, {}, Products>, res: Response) => {
   try {
     const { name, description, price, stock, category } = req.body;
 
-    if (!name || !description || !price || !stock || !category) {
-      return res.status(400).json({
-        message: "all fields are required",
-      });
-    }
     const newProducts = await dbEcommerce.one(
       "INSERT INTO products(name,description,price,stock, category) VALUES ($1,$2,$3,$4, $5) RETURNING *",
       [name, description, price, stock, category],
@@ -130,17 +125,6 @@ const updateProduct = async (
   try {
     const { name, description, price, stock, category } = req.body;
     const { id } = req.params;
-
-    const findProduct = await dbEcommerce.oneOrNone(
-      "SELECT * FROM products where id=$1",
-      [id],
-    );
-
-    if (!findProduct) {
-      return res.status(404).json({
-        message: "product not found",
-      });
-    }
 
     const product = await dbEcommerce.one(
       "UPDATE products SET name=$1, description=$2, price=$3, stock=$4 ,category=$5 WHERE id =$6 RETURNING*",
@@ -171,12 +155,6 @@ const deleteProduct = async (
       "DELETE FROM products WHERE id=$1 RETURNING*",
       [id],
     );
-
-    if (!product) {
-      return res.status(404).json({
-        message: "product not found",
-      });
-    }
 
     await removeCached(KEYS.product);
     await removeCached(KEYS.prodById(id));
