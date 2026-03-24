@@ -49,6 +49,7 @@ const getProfile = async (
       id: getUser.id,
       email: getUser.email,
       username: getUser.username,
+      role: getUser.role,
       phone: getUser.phone,
       address: getUser.address,
       city: getUser.city,
