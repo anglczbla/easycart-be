@@ -8,11 +8,15 @@ const KEYS = {
   categoryById: (id: string) => `category:${id}`,
   cartById: (id: string) => `carts:${id}`,
   userById: (id: string) => `user:${id}`,
+  order: "order:all",
+  orderById: (id: string) => `order:${id}`,
 };
 
 const TTL = {
   session: 24 * 60 * 60, // 1 day in seconds
   product: 300,
+  order: 300,
+  orderById: 600,
   prodById: 600,
   categories: 300,
   categoryById: 600,

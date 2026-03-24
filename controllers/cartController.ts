@@ -8,7 +8,7 @@ import {
 } from "../cache/userCache.ts";
 import { dbEcommerce } from "../config/db.ts";
 
-interface Cart {
+export interface Cart {
   cart_id: string;
   product_id: string;
   name: string;
@@ -115,12 +115,6 @@ const addToCart = async (
         [idCart.id, product_id, quantity],
       );
     }
-
-    const newStock = productStock.stock - quantity;
-    await dbEcommerce.none("UPDATE products SET stock = $1 WHERE id = $2", [
-      newStock,
-      product_id,
-    ]);
 
     await removeCached(KEYS.product);
     await removeCached(KEYS.prodById(product_id));
