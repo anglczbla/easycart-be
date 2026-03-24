@@ -1,6 +1,6 @@
 import express from "express";
 import authController from "../controllers/authController.ts";
-import authUser from "../middleware/auth.ts";
+import { authUser } from "../middleware/auth.ts";
 import {
   validateLogin,
   validateRegister,

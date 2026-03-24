@@ -1,12 +1,17 @@
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { getCached, KEYS } from "../cache/userCache.ts";
+import { dbEcommerce } from "../config/db.ts";
 
 interface JwtPayloadWithId extends jwt.JwtPayload {
   id: string;
 }
 
-const authUser = async (req: Request, res: Response, next: NextFunction) => {
+export const authUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
@@ -45,4 +50,30 @@ const authUser = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-export default authUser;
+export const isAdmin = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const id = req.userId;
+    const findAdmin = await dbEcommerce.oneOrNone(
+      "SELECT * FROM users WHERE id = $1 AND role = $2",
+      [id, "admin"],
+    );
+
+    if (!findAdmin) {
+      return res.status(401).json({
+        success: false,
+        message: "only admin allowed",
+      });
+    }
+    next();
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(401).json({ success: false, message: error.message });
+    } else {
+      res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+  }
+};

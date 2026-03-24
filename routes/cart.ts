@@ -1,7 +1,6 @@
 import express from "express";
 import cartController from "../controllers/cartController.ts";
-import authUser from "../middleware/auth.ts";
-
+import { authUser } from "../middleware/auth.ts";
 import {
   validateAddToCart,
   validateDeleteCart,

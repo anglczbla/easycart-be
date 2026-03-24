@@ -1,6 +1,6 @@
 import express from "express";
 import categoryController from "../controllers/categoryController.ts";
-import authUser from "../middleware/auth.ts";
+import { authUser, isAdmin } from "../middleware/auth.ts";
 import {
   validateAddCategories,
   validateUpdateCategory,
@@ -13,15 +13,17 @@ router.get("/search", categoryController.filterCategory);
 router.post(
   "/",
   authUser,
+  isAdmin,
   validateAddCategories,
   categoryController.addCategories,
 );
 router.put(
   "/:id",
   authUser,
+  isAdmin,
   validateUpdateCategory,
   categoryController.updateCategory,
 );
-router.delete("/:id", authUser, categoryController.deleteCategories);
+router.delete("/:id", authUser, isAdmin, categoryController.deleteCategories);
 
 export default router;
