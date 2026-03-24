@@ -85,7 +85,7 @@ const updateProfile = async (
       id: newProfile.id,
       email: newProfile.email,
       username: newProfile.username,
-      phone: newProfile.newProfilehone,
+      phone: newProfile.phone,
       address: newProfile.address,
       city: newProfile.city,
       avatar: newProfile.avatar,

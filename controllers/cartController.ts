@@ -28,13 +28,13 @@ const getCartById = async (
     }
 
     const cached = await getCached(KEYS.cartById(id));
-    console.log("cached", cached);
     if (cached) {
       return res.status(200).json({
         message: "success fetch cart",
         data: cached,
       });
     }
+
     const findCart = await dbEcommerce.manyOrNone(
       `SELECT 
         carts.id AS cart_id,
@@ -53,7 +53,7 @@ const getCartById = async (
     if (!findCart || findCart.length === 0) {
       return res.status(200).json({
         message: "success fetch cart",
-        data: findCart ?? [],
+        data: [],
       });
     }
 
@@ -79,14 +79,16 @@ const addToCart = async (
     if (!id) {
       return res.status(401).json({ message: "unauthorized" });
     }
+    const { product_id, quantity } = req.body;
+
+    const productStock = res.locals.productStock;
 
     const item = await dbEcommerce.oneOrNone(
-      "SELECT * FROM carts where user_id = $1 LIMIT 1",
+      "SELECT * FROM carts WHERE user_id = $1 LIMIT 1",
       [id],
     );
 
     let idCart;
-
     if (item == null) {
       idCart = await dbEcommerce.one(
         "INSERT INTO carts (user_id) VALUES ($1) RETURNING *",
@@ -94,27 +96,6 @@ const addToCart = async (
       );
     } else {
       idCart = item;
-    }
-
-    const { product_id, quantity } = req.body;
-
-    const productStock = await dbEcommerce.oneOrNone(
-      "SELECT stock FROM products WHERE id = $1",
-      [product_id],
-    );
-
-    if (!productStock) {
-      return res.status(400).json({
-        message: "product not found",
-        success: false,
-      });
-    }
-
-    if (productStock.stock <= 0) {
-      return res.status(400).json({
-        message: "out of stock",
-        success: false,
-      });
     }
 
     const existingItem = await dbEcommerce.oneOrNone(
@@ -130,13 +111,12 @@ const addToCart = async (
       );
     } else {
       await dbEcommerce.one(
-        "INSERT INTO cart_items (cart_id, product_id, quantity) VALUES ($1,$2,$3) RETURNING *",
-        [idCart.id, product_id, 1],
+        "INSERT INTO cart_items (cart_id, product_id, quantity) VALUES ($1, $2, $3) RETURNING *",
+        [idCart.id, product_id, quantity],
       );
     }
 
-    const newStock = productStock.stock - 1;
-
+    const newStock = productStock.stock - quantity;
     await dbEcommerce.none("UPDATE products SET stock = $1 WHERE id = $2", [
       newStock,
       product_id,
@@ -152,7 +132,7 @@ const addToCart = async (
     });
   } catch (err) {
     const error = err as Error;
-    res.status(500).json({ err: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -170,7 +150,7 @@ const updateCartQty = async (
     }
 
     const cart = await dbEcommerce.any(
-      "UPDATE cart_items SET quantity=$1 WHERE cart_id=$2 AND product_id=$3 RETURNING *",
+      "UPDATE cart_items SET quantity = $1 WHERE cart_id = $2 AND product_id = $3 RETURNING *",
       [quantity, id, product_id],
     );
 
@@ -188,7 +168,7 @@ const updateCartQty = async (
     });
   } catch (err) {
     const error = err as Error;
-    res.status(500).json({ err: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -198,14 +178,15 @@ const deleteCart = async (
 ) => {
   try {
     const userId = req.userId;
+    const { id } = req.params;
+    const { product_id } = req.body;
+
     if (!userId) {
       return res.status(401).json({ message: "unauthorized" });
     }
 
-    const { id } = req.params;
-    const { product_id } = req.body;
     const cart = await dbEcommerce.any(
-      "DELETE FROM cart_items WHERE cart_id = $1 AND product_id=$2 RETURNING *",
+      "DELETE FROM cart_items WHERE cart_id = $1 AND product_id = $2 RETURNING *",
       [id, product_id],
     );
 
@@ -223,7 +204,7 @@ const deleteCart = async (
     });
   } catch (err) {
     const error = err as Error;
-    res.status(500).json({ err: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
 
