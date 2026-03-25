@@ -7,8 +7,7 @@ import {
   TTL,
 } from "../cache/userCache.ts";
 import { dbEcommerce } from "../config/db.ts";
-import { Cart } from "./cartController.ts";
-
+import type { Cart } from "./cartController.ts";
 interface Order {
   userId: string;
   totalPrice: number;
@@ -175,14 +174,19 @@ const createOrder = async (req: Request<{}, {}, Order>, res: Response) => {
           item.quantity,
           item.product_id,
         ]);
+
+        await removeCached(KEYS.prodById(item.product_id));
       }
 
       await t.none("DELETE FROM cart_items WHERE cart_id = $1", [carts.id]);
       await t.none("DELETE FROM carts WHERE id = $1", [carts.id]);
 
-      removeCached(KEYS.order);
-      removeCached(KEYS.orderById(id));
-      await removeCached(KEYS.cartById(carts.id));
+      await Promise.all([
+        removeCached(KEYS.product),
+        removeCached(KEYS.cartById(id)),
+        removeCached(KEYS.order),
+        removeCached(KEYS.orderById(id)),
+      ]);
     });
 
     return res.status(201).json({

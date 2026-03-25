@@ -37,15 +37,14 @@ const getCartById = async (
 
     const findCart = await dbEcommerce.manyOrNone(
       `SELECT 
-        carts.id AS cart_id,
-        cart_items.id AS item_id,
-        cart_items.product_id,
-        cart_items.quantity,
+        cart_items.id AS cart_id,
         products.name,
-        products.price
-      FROM carts
-      JOIN cart_items ON carts.id = cart_items.cart_id
+        products.price,
+        cart_items.quantity,
+        products.id AS product_id
+      FROM cart_items
       JOIN products ON cart_items.product_id = products.id
+      JOIN carts ON cart_items.cart_id = carts.id
       WHERE carts.user_id = $1`,
       [id],
     );
