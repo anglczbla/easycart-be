@@ -30,10 +30,12 @@ const getAllOrders = async (req: Request<{}, {}, Order>, res: Response) => {
       `SELECT 
         orders.*, 
         order_items.quantity, 
-        products.name as product_name 
+        products.name as product_name,
+        users.username as customer_name
       FROM orders 
       JOIN order_items ON orders.id = order_items.order_id 
-      JOIN products ON order_items.product_id = products.id`,
+      JOIN products ON order_items.product_id = products.id
+      JOIN users ON orders.user_id = users.id`,
     );
     await setCached(KEYS.order, getOrder, TTL.order);
     return res.status(200).json({
@@ -144,8 +146,10 @@ const createOrder = async (req: Request<{}, {}, Order>, res: Response) => {
       [id],
     );
 
-    if (!findAddress) {
-      return res.status(404).json({ message: "address not found" });
+    if (!findAddress || !findAddress.address || !findAddress.city) {
+      return res
+        .status(404)
+        .json({ message: "address not found, should add address on profile" });
     }
 
     const carts = await dbEcommerce.oneOrNone(
