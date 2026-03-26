@@ -26,7 +26,15 @@ const getAllOrders = async (req: Request<{}, {}, Order>, res: Response) => {
       });
     }
 
-    const getOrder = await dbEcommerce.query("SELECT * FROM orders");
+    const getOrder = await dbEcommerce.query(
+      `SELECT 
+        orders.*, 
+        order_items.quantity, 
+        products.name as product_name 
+      FROM orders 
+      JOIN order_items ON orders.id = order_items.order_id 
+      JOIN products ON order_items.product_id = products.id`,
+    );
     await setCached(KEYS.order, getOrder, TTL.order);
     return res.status(200).json({
       message: "success",
@@ -58,7 +66,14 @@ const getOrdersByUser = async (
     }
 
     const orders = await dbEcommerce.manyOrNone(
-      "SELECT * FROM orders WHERE user_id = $1",
+      `SELECT 
+        orders.*, 
+        order_items.quantity, 
+        products.name as product_name 
+      FROM orders 
+      JOIN order_items ON orders.id = order_items.order_id 
+      JOIN products ON order_items.product_id = products.id 
+      WHERE orders.user_id = $1`,
       [id],
     );
 
@@ -97,7 +112,16 @@ const getOrderById = async (
   }
 
   const orderItems = await dbEcommerce.manyOrNone(
-    "SELECT * FROM order_items WHERE order_id = $1",
+    `SELECT 
+      order_items.id,
+      order_items.order_id,
+      order_items.product_id,
+      order_items.quantity,
+      order_items.price,
+      products.name as product_name
+    FROM order_items
+    JOIN products ON order_items.product_id = products.id
+    WHERE order_items.order_id = $1`,
     [id],
   );
 
