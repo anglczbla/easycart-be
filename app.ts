@@ -1,5 +1,6 @@
 import cors from "cors";
 import express from "express";
+import connectCloudinary from "./config/cloudinary.ts";
 import { dbEcommerce } from "./config/db.ts";
 import { redisClient } from "./config/redis.ts";
 import authRoutes from "./routes/auth.ts";
@@ -16,6 +17,7 @@ redisClient.connect().then(() => {
   console.log("Redis connected");
 });
 
+connectCloudinary();
 app.use(cors());
 app.use(express.json());
 app.use("/api/ecommerce/auth", authRoutes);
