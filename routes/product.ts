@@ -6,6 +6,7 @@ import {
   validateProductId,
   validateUpdateProduct,
 } from "../middleware/validation/productValidation.ts";
+import upload from "../middleware/multer.ts";
 
 const router = express.Router();
 
@@ -16,6 +17,7 @@ router.post(
   "/",
   authUser,
   isAdmin,
+  upload.single("image"),
   validateAddProduct,
   productController.addProducts,
 );
@@ -23,6 +25,7 @@ router.put(
   "/:id",
   authUser,
   isAdmin,
+  upload.single("image"),
   validateUpdateProduct,
   productController.updateProduct,
 );

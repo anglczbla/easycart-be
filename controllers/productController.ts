@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import fs from "fs";
 import {
   getCached,
   KEYS,
@@ -6,6 +7,7 @@ import {
   setCached,
   TTL,
 } from "../cache/userCache.ts";
+import { cloudinary } from "../config/cloudinary.ts";
 import { dbEcommerce } from "../config/db.ts";
 
 interface Products {
@@ -15,6 +17,7 @@ interface Products {
   price: number;
   stock: number;
   category: string;
+  image: string;
 }
 
 const getAllProducts = async (
@@ -40,6 +43,7 @@ const getAllProducts = async (
       price: p.price,
       stock: p.stock,
       category: p.category,
+      image: p.image,
     }));
 
     await setCached(KEYS.product, result, TTL.product);
@@ -81,6 +85,7 @@ const getProductById = async (
       price: getProduct.price,
       stock: getProduct.stock,
       category: getProduct.category,
+      image: getProduct.image,
     };
 
     await setCached(KEYS.prodById(id), result, TTL.prodById);
@@ -100,10 +105,23 @@ const getProductById = async (
 const addProducts = async (req: Request<{}, {}, Products>, res: Response) => {
   try {
     const { name, description, price, stock, category } = req.body;
+    const imageFile = req.file;
+
+    if (!imageFile) {
+      return res.status(400).json({ message: "image is required" });
+    }
+
+    const result = await cloudinary.uploader.upload(imageFile.path, {
+      folder: "easycart/products",
+    });
+
+    fs.unlinkSync(imageFile.path);
+
+    const image = result.secure_url;
 
     const newProducts = await dbEcommerce.one(
-      "INSERT INTO products(name,description,price,stock, category) VALUES ($1,$2,$3,$4, $5) RETURNING *",
-      [name, description, price, stock, category],
+      "INSERT INTO products(name,description,price,stock, category, image) VALUES ($1,$2,$3,$4, $5, $6) RETURNING *",
+      [name, description, price, stock, category, image],
     );
 
     await removeCached(KEYS.product);
@@ -125,11 +143,30 @@ const updateProduct = async (
   try {
     const { name, description, price, stock, category } = req.body;
     const { id } = req.params;
+    const imageFile = req.file;
 
-    const product = await dbEcommerce.one(
-      "UPDATE products SET name=$1, description=$2, price=$3, stock=$4 ,category=$5 WHERE id =$6 RETURNING*",
-      [name, description, price, stock, category, id],
-    );
+    let image: string | undefined;
+
+    if (imageFile) {
+      const result = await cloudinary.uploader.upload(imageFile.path, {
+        folder: "easycart/products",
+      });
+
+      fs.unlinkSync(imageFile.path);
+      image = result.secure_url;
+    }
+
+    let query =
+      "UPDATE products SET name=$1, description=$2, price=$3, stock=$4 ,category=$5 WHERE id =$6 RETURNING*";
+    let params = [name, description, price, stock, category, id];
+
+    if (image) {
+      query =
+        "UPDATE products SET name=$1, description=$2, price=$3, stock=$4 ,category=$5, image=$6 WHERE id =$7 RETURNING*";
+      params = [name, description, price, stock, category, image, id];
+    }
+
+    const product = await dbEcommerce.one(query, params);
 
     await removeCached(KEYS.product);
     await removeCached(KEYS.prodById(id));

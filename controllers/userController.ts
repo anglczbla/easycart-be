@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import fs from "fs";
 import {
   getCached,
   KEYS,
@@ -6,6 +7,7 @@ import {
   setCached,
   TTL,
 } from "../cache/userCache.ts";
+import { cloudinary } from "../config/cloudinary.ts";
 import { dbEcommerce } from "../config/db.ts";
 
 interface Users {
@@ -75,12 +77,30 @@ const updateProfile = async (
       return res.status(401).json({ message: "unauthorized" });
     }
 
-    const { email, username, phone, address, city, avatar } = req.body;
+    const { email, username, phone, address, city } = req.body;
+    const imageFile = req.file;
 
-    const newProfile = await dbEcommerce.one(
-      "UPDATE users SET email=$1, username=$2, phone=$3, address=$4, city=$5, avatar=$6 WHERE id=$7 RETURNING *",
-      [email, username, phone, address, city, avatar, id],
-    );
+    let avatar: string | undefined;
+
+    if (imageFile) {
+      const result = await cloudinary.uploader.upload(imageFile.path, {
+        folder: "easycart/avatars",
+      });
+      fs.unlinkSync(imageFile.path);
+      avatar = result.secure_url;
+    }
+
+    let query =
+      "UPDATE users SET email=$1, username=$2, phone=$3, address=$4, city=$5 WHERE id=$6 RETURNING *";
+    let params = [email, username, phone, address, city, id];
+
+    if (avatar) {
+      query =
+        "UPDATE users SET email=$1, username=$2, phone=$3, address=$4, city=$5, avatar=$6 WHERE id=$7 RETURNING *";
+      params = [email, username, phone, address, city, avatar, id];
+    }
+
+    const newProfile = await dbEcommerce.one(query, params);
 
     const result = {
       id: newProfile.id,

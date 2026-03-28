@@ -5,6 +5,7 @@ declare global {
     interface Request {
       userId?: string;
       user?: any;
+      file?: any;
     }
   }
 }
