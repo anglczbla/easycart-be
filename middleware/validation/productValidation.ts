@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
+import z from "zod";
 import { dbEcommerce } from "../../config/db.ts";
 
 export const validateAddProduct = (
@@ -6,26 +7,25 @@ export const validateAddProduct = (
   res: Response,
   next: NextFunction,
 ) => {
-  const { name, description, price, stock, category } = req.body;
+  const addProductSchema = z.object({
+    name: z.string().min(1, "name is required"),
+    description: z.string().min(1, "description is required"),
+    price: z.coerce.number().min(1, "price must be a positive number"),
+    stock: z.coerce
+      .number()
+      .int()
+      .min(0, "stock must be a non-negative integer"),
+    category: z.string().min(1, "category is required"),
+  });
 
-  if (!name || !description || !price || !stock || !category) {
+  const parsed = addProductSchema.safeParse(req.body);
+
+  if (!parsed.success) {
     return res.status(400).json({
-      message: "all fields are required",
+      message: "validation error",
+      errors: parsed.error.flatten().fieldErrors,
     });
   }
-  const priceNum = Number(price);
-  const stockNum = Number(stock);
-
-  if (isNaN(priceNum) || priceNum <= 0) {
-    return res.status(400).json({ message: "price must be a positive number" });
-  }
-
-  if (isNaN(stockNum) || stockNum < 0 || !Number.isInteger(stockNum)) {
-    return res
-      .status(400)
-      .json({ message: "stock must be a non-negative integer" });
-  }
-
   next();
 };
 
@@ -36,25 +36,24 @@ export const validateUpdateProduct = async (
 ) => {
   try {
     const { id } = req.params;
-    const { name, description, price, stock, category } = req.body;
+    const updateProductSchema = z.object({
+      name: z.string().min(1, "name is required"),
+      description: z.string().min(1, "description is required"),
+      price: z.coerce.number().min(1, "price must be a positive number"),
+      stock: z.coerce
+        .number()
+        .int()
+        .min(0, "stock must be a non-negative integer"),
+      category: z.string().min(1, "category is required"),
+    });
 
-    if (!name || !description || !price || !stock || !category) {
-      return res.status(400).json({ message: "all fields are required" });
-    }
+    const parsed = updateProductSchema.safeParse(req.body);
 
-    const priceNum = Number(price);
-    const stockNum = Number(stock);
-
-    if (isNaN(priceNum) || priceNum <= 0) {
-      return res
-        .status(400)
-        .json({ message: "price must be a positive number" });
-    }
-
-    if (isNaN(stockNum) || stockNum < 0 || !Number.isInteger(stockNum)) {
-      return res
-        .status(400)
-        .json({ message: "stock must be a non-negative integer" });
+    if (!parsed.success) {
+      return res.status(400).json({
+        message: "validation error",
+        errors: parsed.error.flatten().fieldErrors,
+      });
     }
 
     const findProduct = await dbEcommerce.oneOrNone(
