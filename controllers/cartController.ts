@@ -14,6 +14,7 @@ export interface Cart {
   name: string;
   price: number;
   quantity: number;
+  image: string;
 }
 
 const getCartById = async (
@@ -40,6 +41,7 @@ const getCartById = async (
         cart_items.id AS cart_id,
         products.name,
         products.price,
+        products.image,
         cart_items.quantity,
         products.id AS product_id
       FROM cart_items

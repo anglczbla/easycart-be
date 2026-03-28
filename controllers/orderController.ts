@@ -31,6 +31,7 @@ const getAllOrders = async (req: Request<{}, {}, Order>, res: Response) => {
         orders.*, 
         order_items.quantity, 
         products.name as product_name,
+        products.image as product_image,
         users.username as customer_name
       FROM orders 
       JOIN order_items ON orders.id = order_items.order_id 
@@ -71,7 +72,8 @@ const getOrdersByUser = async (
       `SELECT 
         orders.*, 
         order_items.quantity, 
-        products.name as product_name 
+        products.name as product_name,
+        products.image as product_image
       FROM orders 
       JOIN order_items ON orders.id = order_items.order_id 
       JOIN products ON order_items.product_id = products.id 
@@ -120,7 +122,8 @@ const getOrderById = async (
       order_items.product_id,
       order_items.quantity,
       order_items.price,
-      products.name as product_name
+      products.name as product_name,
+      products.image as product_image
     FROM order_items
     JOIN products ON order_items.product_id = products.id
     WHERE order_items.order_id = $1`,
