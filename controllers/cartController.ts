@@ -38,7 +38,8 @@ const getCartById = async (
 
     const findCart = await dbEcommerce.manyOrNone(
       `SELECT 
-        cart_items.id AS cart_id,
+        carts.id AS cart_id,
+        cart_items.id AS cart_item_id,
         products.name,
         products.price,
         products.image,
