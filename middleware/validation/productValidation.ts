@@ -13,12 +13,14 @@ export const validateAddProduct = (
       message: "all fields are required",
     });
   }
+  const priceNum = Number(price);
+  const stockNum = Number(stock);
 
-  if (typeof price !== "number" || price <= 0) {
+  if (isNaN(priceNum) || priceNum <= 0) {
     return res.status(400).json({ message: "price must be a positive number" });
   }
 
-  if (typeof stock !== "number" || stock < 0 || !Number.isInteger(stock)) {
+  if (isNaN(stockNum) || stockNum < 0 || !Number.isInteger(stockNum)) {
     return res
       .status(400)
       .json({ message: "stock must be a non-negative integer" });
@@ -40,13 +42,16 @@ export const validateUpdateProduct = async (
       return res.status(400).json({ message: "all fields are required" });
     }
 
-    if (typeof price !== "number" || price <= 0) {
+    const priceNum = Number(price);
+    const stockNum = Number(stock);
+
+    if (isNaN(priceNum) || priceNum <= 0) {
       return res
         .status(400)
         .json({ message: "price must be a positive number" });
     }
 
-    if (typeof stock !== "number" || stock < 0 || !Number.isInteger(stock)) {
+    if (isNaN(stockNum) || stockNum < 0 || !Number.isInteger(stockNum)) {
       return res
         .status(400)
         .json({ message: "stock must be a non-negative integer" });
