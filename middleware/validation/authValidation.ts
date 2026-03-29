@@ -1,46 +1,44 @@
 import bcrypt from "bcryptjs";
 import type { NextFunction, Request, Response } from "express";
+import z from "zod";
 import { dbEcommerce } from "../../config/db.ts";
-
-const validateUsername = (username: string): string | null => {
-  if (!username) return "Username is required";
-  if (username.length < 3) return "Username must be at least 3 characters";
-  if (username.length > 20) return "Username must be at most 20 characters";
-  if (!/^[a-zA-Z0-9_]+$/.test(username))
-    return "Username can only contain letters, numbers, and underscores";
-  return null;
-};
-
-const validatePassword = (password: string): string | null => {
-  if (!password) return "Password is required";
-  if (password.length < 8) return "Password must be at least 8 characters";
-  if (!/[A-Z]/.test(password))
-    return "Password must contain at least one uppercase letter";
-  if (!/[a-z]/.test(password))
-    return "Password must contain at least one lowercase letter";
-  if (!/[0-9]/.test(password))
-    return "Password must contain at least one number";
-  if (!/[!@#$%^&*]/.test(password))
-    return "Password must contain at least one special character (!@#$%^&*)";
-  return null;
-};
 
 export const validateRegister = async (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
-  const { username, email, password } = req.body;
+  const { username, email } = req.body;
 
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return res.status(400).json({ message: "invalid email format" });
+  const registerSchema = z.object({
+    username: z
+      .string()
+      .min(3, "username must be at least 3 characters")
+      .max(20, "username must be at most 20 characters")
+      .regex(
+        /^[a-zA-Z0-9_]+$/,
+        "username can only contain letters, numbers, and underscores",
+      ),
+    password: z
+      .string()
+      .min(8, " password must be at least 8 characters")
+      .regex(/[A-Z]/, "password must contain at leaste on uppercase letter")
+      .regex(/[a-z]/, "password must contain at least one lowercase letter")
+      .regex(/[0-9]/, "password must contain at least one number")
+      .regex(
+        /[!@#$%^&*]/,
+        "password must contain at least one special character (!@#$%^&*)",
+      ),
+    email: z.email("invalid email format"),
+  });
+
+  const parsed = registerSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({
+      message: "validation error",
+      errors: parsed.error.flatten().fieldErrors,
+    });
   }
-
-  const usernameError = validateUsername(username);
-  if (usernameError) return res.status(400).json({ message: usernameError });
-
-  const passwordError = validatePassword(password);
-  if (passwordError) return res.status(400).json({ message: passwordError });
 
   try {
     const existingUser = await dbEcommerce.oneOrNone(
@@ -68,12 +66,17 @@ export const validateLogin = async (
 ) => {
   const { email, password } = req.body;
 
-  if (!email) {
-    return res.status(400).json({ message: "email is required" });
-  }
+  const loginSchema = z.object({
+    email: z.string().min(1, "email is required"),
+    password: z.string().min(1, "password is required"),
+  });
 
-  if (!password) {
-    return res.status(400).json({ message: "password is required" });
+  const parsed = loginSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({
+      message: "validation error",
+      errors: parsed.error.flatten().fieldErrors,
+    });
   }
 
   try {
