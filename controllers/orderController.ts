@@ -238,13 +238,6 @@ const updateOrder = async (
     const { id } = req.params;
     const { status } = req.body;
 
-    if (!id) {
-      return res.status(404).json({
-        message: "orders not found",
-        status: false,
-      });
-    }
-
     const order = await dbEcommerce.one(
       "UPDATE orders set status=$1 WHERE id=$2 RETURNING *",
       [status, id],
