@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
+import z from "zod";
 import { dbEcommerce } from "../../config/db.ts";
 
 export const validateAddToCart = async (
@@ -8,11 +9,17 @@ export const validateAddToCart = async (
 ) => {
   try {
     const { product_id, quantity } = req.body;
+    const addToCartSchema = z.object({
+      product_id: z.string().min(1, "id is required"),
+      quantity: z.number().min(1, "qty must greater than 0"),
+    });
 
-    if (!quantity || quantity <= 0) {
+    const parsed = addToCartSchema.safeParse(req.body);
+
+    if (!parsed.success) {
       return res.status(400).json({
-        message: "quantity must be greater than 0",
-        success: false,
+        message: "validation error",
+        errors: parsed.error.flatten().fieldErrors,
       });
     }
 
@@ -60,10 +67,30 @@ export const validateUpdateCartQty = async (
     const { product_id, quantity } = req.body;
     const userId = req.userId;
 
-    if (!quantity || quantity <= 0) {
+    const addToCartSchema = z.object({
+      product_id: z.string().min(1, "id is required"),
+      quantity: z.number().min(1, "qty must greater than 0"),
+    });
+
+    const addToCartParams = z.object({
+      id: z.string().min(1, "id is required"),
+    });
+
+    const addToCartUserId = z.object({
+      userId: z.string().min(1, "user id is required"),
+    });
+
+    const bodyParsed = addToCartSchema.safeParse(req.body);
+    const paramsParsed = addToCartParams.safeParse(req.params);
+    const userIdParsed = addToCartUserId.safeParse({ userId: req.userId });
+
+    if (!bodyParsed.success || !paramsParsed.success || !userIdParsed.success) {
       return res.status(400).json({
-        message: "quantity must be greater than 0",
-        success: false,
+        errors: {
+          ...bodyParsed.error?.flatten().fieldErrors,
+          ...paramsParsed.error?.flatten().fieldErrors,
+          ...userIdParsed.error?.flatten().fieldErrors,
+        },
       });
     }
 
@@ -113,6 +140,26 @@ export const validateDeleteCart = async (
   try {
     const { id } = req.params;
     const userId = req.userId;
+
+    const paramsSchema = z.object({
+      id: z.string().min(1, "id is required"),
+    });
+
+    const userIdSchema = z.object({
+      userId: z.string().min(1, "user id is required"),
+    });
+
+    const paramsParsed = paramsSchema.safeParse(req.params);
+    const userIdParsed = userIdSchema.safeParse({ userId: req.userId });
+
+    if (!paramsParsed.success || !userIdParsed.success) {
+      return res.status(400).json({
+        errors: {
+          ...paramsParsed.error?.flatten().fieldErrors,
+          ...userIdParsed.error?.flatten().fieldErrors,
+        },
+      });
+    }
 
     const cart = await dbEcommerce.oneOrNone(
       "SELECT * FROM carts WHERE id = $1 AND user_id = $2",
