@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
+import z from "zod";
 import { dbEcommerce } from "../../config/db.ts";
 
 export const validateAddCategories = async (
@@ -8,6 +9,18 @@ export const validateAddCategories = async (
 ) => {
   try {
     const { name } = req.body;
+    const addCategorySchema = z.object({
+      name: z.string().min(1, "name is required"),
+    });
+
+    const parsed = addCategorySchema.safeParse(req.body);
+
+    if (!parsed.success) {
+      return res.status(400).json({
+        message: "validation error",
+        errors: parsed.error.flatten().fieldErrors,
+      });
+    }
 
     const duplicateName = await dbEcommerce.oneOrNone(
       "SELECT * FROM categories WHERE name = $1",
@@ -35,6 +48,26 @@ export const validateUpdateCategory = async (
   try {
     const { name } = req.body;
     const { id } = req.params;
+
+    const bodySchema = z.object({
+      name: z.string().min(1, "name is required"),
+    });
+
+    const paramsSchema = z.object({
+      id: z.string().min(1, "id is required"),
+    });
+
+    const bodyParsed = bodySchema.safeParse(req.body);
+    const paramsParsed = paramsSchema.safeParse(req.params);
+
+    if (!bodyParsed.success || !paramsParsed.success) {
+      return res.status(400).json({
+        errors: {
+          ...bodyParsed.error?.flatten().fieldErrors,
+          ...paramsParsed.error?.flatten().fieldErrors,
+        },
+      });
+    }
 
     const findCategory = await dbEcommerce.oneOrNone(
       "SELECT * FROM categories WHERE id = $1",
