@@ -22,7 +22,7 @@ export const validateRegister = async (
     password: z
       .string()
       .min(8, " password must be at least 8 characters")
-      .regex(/[A-Z]/, "password must contain at leaste on uppercase letter")
+      .regex(/[A-Z]/, "password must contain at least on uppercase letter")
       .regex(/[a-z]/, "password must contain at least one lowercase letter")
       .regex(/[0-9]/, "password must contain at least one number")
       .regex(
@@ -47,10 +47,19 @@ export const validateRegister = async (
     );
 
     if (existingUser?.email === email) {
-      return res.status(400).json({ message: "email already registered" });
+      return res.status(400).json({
+        errors: {
+          email: ["email already exist"],
+        },
+      });
     }
+
     if (existingUser?.username === username) {
-      return res.status(400).json({ message: "username already exist" });
+      return res.status(400).json({
+        errors: {
+          username: ["username already exist"],
+        },
+      });
     }
 
     next();
