@@ -244,7 +244,7 @@ const updateOrder = async (
     );
 
     await removeCached(KEYS.order);
-    await removeCached(KEYS.orderById(id));
+    await removeCached(KEYS.orderById(order.user_id));
 
     return res.status(200).json({
       message: "success update order",
