@@ -230,6 +230,7 @@ const searchProduct = async (
       price: p.price,
       stock: p.stock,
       category: p.category,
+      image: p.image
     }));
 
     return res.status(200).json({

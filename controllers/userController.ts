@@ -78,6 +78,7 @@ const updateProfile = async (
     }
 
     const { email, username, phone, address, city } = req.body;
+
     const imageFile = req.file;
 
     let avatar: string | undefined;

@@ -10,8 +10,8 @@ router.get("/", authUser, userController.getProfile);
 router.put(
   "/",
   authUser,
-  validateUpdateProfile,
   upload.single("avatar"),
+  validateUpdateProfile,
   userController.updateProfile,
 );
 
