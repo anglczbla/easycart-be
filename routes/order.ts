@@ -1,6 +1,7 @@
 import express from "express";
 import orderController from "../controllers/orderController.ts";
 import { authUser, isAdmin } from "../middleware/auth.ts";
+import upload from "../middleware/multer.ts";
 import {
   validateGetOrderById,
   validateUpdateOrder,
@@ -17,7 +18,13 @@ router.get(
   validateGetOrderById,
   orderController.getOrderById,
 );
-router.post("/", authUser, validateUserId, orderController.createOrder);
+router.post(
+  "/",
+  authUser,
+  validateUserId,
+  upload.single("image"),
+  orderController.createOrder,
+);
 router.put(
   "/:id",
   authUser,

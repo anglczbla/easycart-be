@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import fs from "fs";
 import {
   getCached,
   KEYS,
@@ -6,6 +7,7 @@ import {
   setCached,
   TTL,
 } from "../cache/userCache.ts";
+import { cloudinary } from "../config/cloudinary.ts";
 import { dbEcommerce } from "../config/db.ts";
 import type { Cart } from "./cartController.ts";
 interface Order {
@@ -13,6 +15,7 @@ interface Order {
   totalPrice: number;
   shippingAddress: string;
   status: string;
+  image: string;
 }
 
 const getAllOrders = async (req: Request<{}, {}, Order>, res: Response) => {
@@ -139,10 +142,23 @@ const getOrderById = async (
 const createOrder = async (req: Request<{}, {}, Order>, res: Response) => {
   try {
     const id = req.userId;
+    const image = req.file;
 
     if (!id) {
       return res.status(401).json({ message: "unauthorized" });
     }
+
+    if (!image) {
+      return res.status(400).json({ message: "image is required" });
+    }
+
+    const result = await cloudinary.uploader.upload(image.path, {
+      folder: "easycart/products",
+    });
+
+    fs.unlinkSync(image.path);
+
+    const imageFile = result.secure_url;
 
     const findAddress = await dbEcommerce.oneOrNone(
       "SELECT address, city FROM users WHERE id = $1",
@@ -186,12 +202,13 @@ const createOrder = async (req: Request<{}, {}, Order>, res: Response) => {
 
     await dbEcommerce.tx(async (t) => {
       const order = await t.one(
-        "INSERT INTO orders(user_id, total_price, status, shipping_address) VALUES($1, $2, $3, $4) RETURNING id",
+        "INSERT INTO orders(user_id, total_price, status, shipping_address, image) VALUES($1, $2, $3, $4, $5) RETURNING id",
         [
           id,
           totalPrice,
           "pending",
           `${findAddress.address}, ${findAddress.city}`,
+          imageFile,
         ],
       );
 
