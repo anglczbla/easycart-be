@@ -5,14 +5,14 @@ import {
   removeCached,
   setCached,
   TTL,
-} from "../cache/userCache.ts";
-import { cloudinary } from "../config/cloudinary.ts";
-import { dbEcommerce } from "../config/db.ts";
+} from "../cache/userCache";
+import { cloudinary } from "../config/cloudinary";
+import { dbEcommerce } from "../config/db";
 import type {
   CreateProductDTO,
   Product,
   UpdateProductDTO,
-} from "../types/product.ts";
+} from "../types/product";
 
 const getAllProducts = async (): Promise<Product[]> => {
   const cached = await getCached(KEYS.product);
@@ -61,6 +61,10 @@ const getProductById = async (id: string): Promise<Product | null> => {
 
 const addProducts = async (data: CreateProductDTO): Promise<Product> => {
   const { name, description, price, stock, category, imageFile } = data;
+
+  if (!imageFile) {
+    throw new Error("image is required");
+  }
 
   const result = await cloudinary.uploader.upload(imageFile.path, {
     folder: "easycart/products",
