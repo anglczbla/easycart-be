@@ -1,4 +1,4 @@
-import { redisClient } from "../config/redis.ts";
+import { redisClient } from "../config/redis";
 
 const KEYS = {
   session: (id: string) => `session:user:${id}`,

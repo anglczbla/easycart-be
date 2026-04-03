@@ -1,8 +1,8 @@
 import express from "express";
-import userController from "../controllers/userController.ts";
-import { authUser } from "../middleware/auth.ts";
-import upload from "../middleware/multer.ts";
-import { validateUpdateProfile } from "../middleware/validation/userValidation.ts";
+import userController from "../controllers/userController";
+import { authUser } from "../middleware/auth";
+import upload from "../middleware/multer";
+import { validateUpdateProfile } from "../middleware/validation/userValidation";
 
 const router = express.Router();
 

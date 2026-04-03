@@ -1,14 +1,14 @@
 import cors from "cors";
 import express from "express";
-import connectCloudinary from "../config/cloudinary.ts";
-import { dbEcommerce } from "../config/db.ts";
-import { redisClient } from "../config/redis.ts";
-import authRoutes from "../routes/auth.ts";
-import cartRoutes from "../routes/cart.ts";
-import categoryRoutes from "../routes/category.ts";
-import orderRoutes from "../routes/order.ts";
-import productRoutes from "../routes/product.ts";
-import userRoute from "../routes/user.ts";
+import connectCloudinary from "../config/cloudinary";
+import { dbEcommerce } from "../config/db";
+import { redisClient } from "../config/redis";
+import authRoutes from "../routes/auth";
+import cartRoutes from "../routes/cart";
+import categoryRoutes from "../routes/category";
+import orderRoutes from "../routes/order";
+import productRoutes from "../routes/product";
+import userRoute from "../routes/user";
 
 const app = express();
 const port = 3000;

@@ -1,11 +1,11 @@
 import express from "express";
-import cartController from "../controllers/cartController.ts";
-import { authUser } from "../middleware/auth.ts";
+import cartController from "../controllers/cartController";
+import { authUser } from "../middleware/auth";
 import {
   validateAddToCart,
   validateDeleteCart,
   validateUpdateCartQty,
-} from "../middleware/validation/cartValidation.ts";
+} from "../middleware/validation/cartValidation";
 
 const router = express.Router();
 

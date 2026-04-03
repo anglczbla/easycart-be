@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import categoryService from "../services/categoryService.ts";
+import categoryService from "../services/categoryService";
 
 const getAllCategories = async (req: Request, res: Response) => {
   try {
@@ -29,7 +29,10 @@ const addCategories = async (req: Request, res: Response) => {
   }
 };
 
-const deleteCategories = async (req: Request<{ id: string }>, res: Response) => {
+const deleteCategories = async (
+  req: Request<{ id: string }>,
+  res: Response,
+) => {
   try {
     const { id } = req.params;
     const category = await categoryService.deleteCategory(id);

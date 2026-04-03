@@ -1,10 +1,10 @@
 import express from "express";
-import categoryController from "../controllers/categoryController.ts";
-import { authUser, isAdmin } from "../middleware/auth.ts";
+import categoryController from "../controllers/categoryController";
+import { authUser, isAdmin } from "../middleware/auth";
 import {
   validateAddCategories,
   validateUpdateCategory,
-} from "../middleware/validation/categoryValidation.ts";
+} from "../middleware/validation/categoryValidation";
 
 const router = express.Router();
 

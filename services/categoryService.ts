@@ -1,6 +1,16 @@
-import { getCached, KEYS, removeCached, setCached, TTL } from "../cache/userCache.ts";
-import { dbEcommerce } from "../config/db.ts";
-import type { Category, CreateCategoryDTO, UpdateCategoryDTO } from "../types/category.ts";
+import {
+  getCached,
+  KEYS,
+  removeCached,
+  setCached,
+  TTL,
+} from "../cache/userCache";
+import { dbEcommerce } from "../config/db";
+import type {
+  Category,
+  CreateCategoryDTO,
+  UpdateCategoryDTO,
+} from "../types/category";
 
 const getAllCategories = async (): Promise<Category[]> => {
   const cached = await getCached(KEYS.categories);

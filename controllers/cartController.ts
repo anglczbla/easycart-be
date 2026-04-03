@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import cartService from "../services/cartService.ts";
+import cartService from "../services/cartService";
 
 const getCartById = async (req: Request, res: Response) => {
   try {

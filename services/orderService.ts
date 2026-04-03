@@ -1,8 +1,14 @@
 import fs from "fs";
-import { getCached, KEYS, removeCached, setCached, TTL } from "../cache/userCache.ts";
-import { cloudinary } from "../config/cloudinary.ts";
-import { dbEcommerce } from "../config/db.ts";
-import type { CreateOrderDTO, Order, UpdateOrderDTO } from "../types/order.ts";
+import {
+  getCached,
+  KEYS,
+  removeCached,
+  setCached,
+  TTL,
+} from "../cache/userCache";
+import { cloudinary } from "../config/cloudinary";
+import { dbEcommerce } from "../config/db";
+import type { CreateOrderDTO, Order, UpdateOrderDTO } from "../types/order";
 
 const getAllOrders = async (): Promise<Order[]> => {
   const cached = await getCached(KEYS.order);
@@ -72,7 +78,7 @@ const getOrderById = async (orderId: string): Promise<any> => {
 };
 
 const createOrder = async (data: CreateOrderDTO): Promise<void> => {
-  const { userId, imageFile } = data;
+  const { userId, imageFile, address, city, cartItems } = data;
 
   const uploadResult = await cloudinary.uploader.upload(imageFile.path, {
     folder: "easycart/products",
@@ -82,43 +88,12 @@ const createOrder = async (data: CreateOrderDTO): Promise<void> => {
 
   const imageUrl = uploadResult.secure_url;
 
-  const findAddress = await dbEcommerce.oneOrNone(
-    "SELECT address, city FROM users WHERE id = $1",
-    [userId],
-  );
-
-  if (!findAddress || !findAddress.address || !findAddress.city) {
-    throw new Error("address not found, should add address on profile");
-  }
-
-  const carts = await dbEcommerce.oneOrNone(
-    "SELECT * FROM carts WHERE user_id = $1",
-    [userId],
-  );
-
-  if (!carts) {
-    throw new Error("cart not found");
-  }
-
-  const cartItems = await dbEcommerce.manyOrNone(
-    `SELECT 
-      cart_items.product_id,
-      cart_items.quantity,
-      products.price
-    FROM cart_items
-    JOIN products ON cart_items.product_id = products.id
-    WHERE cart_items.cart_id = $1`,
-    [carts.id],
-  );
-
-  if (!cartItems || cartItems.length === 0) {
-    throw new Error("cart is empty");
-  }
-
   const totalPrice = cartItems.reduce(
     (acc: number, item: any) => acc + Number(item.price) * Number(item.quantity),
     0,
   );
+
+  const cartId = cartItems[0].cart_id;
 
   await dbEcommerce.tx(async (t) => {
     const order = await t.one(
@@ -127,7 +102,7 @@ const createOrder = async (data: CreateOrderDTO): Promise<void> => {
         userId,
         totalPrice,
         "pending",
-        `${findAddress.address}, ${findAddress.city}`,
+        `${address}, ${city}`,
         imageUrl,
       ],
     );
@@ -146,8 +121,8 @@ const createOrder = async (data: CreateOrderDTO): Promise<void> => {
       await removeCached(KEYS.prodById(item.product_id));
     }
 
-    await t.none("DELETE FROM cart_items WHERE cart_id = $1", [carts.id]);
-    await t.none("DELETE FROM carts WHERE id = $1", [carts.id]);
+    await t.none("DELETE FROM cart_items WHERE cart_id = $1", [cartId]);
+    await t.none("DELETE FROM carts WHERE id = $1", [cartId]);
 
     await Promise.all([
       removeCached(KEYS.product),

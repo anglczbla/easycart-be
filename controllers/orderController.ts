@@ -1,5 +1,7 @@
 import type { Request, Response } from "express";
-import orderService from "../services/orderService.ts";
+import orderService from "../services/orderService";
+import userService from "../services/userService";
+import cartService from "../services/cartService";
 
 const getAllOrders = async (req: Request, res: Response) => {
   try {
@@ -64,9 +66,26 @@ const createOrder = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "image is required" });
     }
 
+    const findAddress = await userService.getProfile(id);
+
+    if (!findAddress || !findAddress.address || !findAddress.city) {
+      return res
+        .status(404)
+        .json({ message: "address not found, should add address on profile" });
+    }
+
+    const cartItems = await cartService.getCartByUserId(id);
+
+    if (!cartItems || cartItems.length === 0) {
+      return res.status(400).json({ message: "cart is empty" });
+    }
+
     await orderService.createOrder({
       userId: id,
       imageFile,
+      address: findAddress.address,
+      city: findAddress.city,
+      cartItems,
     });
 
     return res.status(201).json({

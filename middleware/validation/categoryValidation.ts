@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import z from "zod";
-import { dbEcommerce } from "../../config/db.ts";
+import { dbEcommerce } from "../../config/db";
 
 export const validateAddCategories = async (
   req: Request,

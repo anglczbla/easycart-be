@@ -1,12 +1,12 @@
 import express from "express";
-import orderController from "../controllers/orderController.ts";
-import { authUser, isAdmin } from "../middleware/auth.ts";
-import upload from "../middleware/multer.ts";
+import orderController from "../controllers/orderController";
+import { authUser, isAdmin } from "../middleware/auth";
+import upload from "../middleware/multer";
 import {
   validateGetOrderById,
   validateUpdateOrder,
   validateUserId,
-} from "../middleware/validation/orderValidation.ts";
+} from "../middleware/validation/orderValidation";
 
 const router = express.Router();
 

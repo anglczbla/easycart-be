@@ -20,9 +20,14 @@ export interface Order {
   customer_name?: string;
 }
 
+import type { CartItem } from "./cart";
+
 export interface CreateOrderDTO {
   userId: string;
   imageFile: Express.Multer.File;
+  address: string;
+  city: string;
+  cartItems: CartItem[];
 }
 
 export interface UpdateOrderDTO {

@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { getCached, KEYS } from "../cache/userCache.ts";
-import { dbEcommerce } from "../config/db.ts";
+import { getCached, KEYS } from "../cache/userCache";
+import { dbEcommerce } from "../config/db";
 
 interface JwtPayloadWithId extends jwt.JwtPayload {
   id: string;

@@ -62,10 +62,6 @@ const getProductById = async (id: string): Promise<Product | null> => {
 const addProducts = async (data: CreateProductDTO): Promise<Product> => {
   const { name, description, price, stock, category, imageFile } = data;
 
-  if (!imageFile) {
-    throw new Error("image is required");
-  }
-
   const result = await cloudinary.uploader.upload(imageFile.path, {
     folder: "easycart/products",
   });

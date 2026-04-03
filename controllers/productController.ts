@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import productService from "../services/productService.ts";
+import productService from "../services/productService";
 
 const getAllProducts = async (req: Request, res: Response) => {
   try {
@@ -10,6 +10,7 @@ const getAllProducts = async (req: Request, res: Response) => {
     });
   } catch (err) {
     const error = err as Error;
+    console.error("getAllProducts error:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -37,6 +38,10 @@ const addProducts = async (req: Request, res: Response) => {
   try {
     const { name, description, price, stock, category } = req.body;
     const imageFile = req.file;
+
+    if (!imageFile) {
+      return res.status(400).json({ message: "image is required" });
+    }
 
     const newProduct = await productService.addProducts({
       name,
@@ -106,8 +111,8 @@ const searchProduct = async (req: Request, res: Response) => {
   try {
     const { product, category } = req.query;
     const result = await productService.searchProduct(
-      product as string || "",
-      category as string || ""
+      (product as string) || "",
+      (category as string) || "",
     );
 
     return res.status(200).json({
