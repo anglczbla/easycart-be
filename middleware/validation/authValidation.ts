@@ -109,6 +109,7 @@ export const validateLogin = async (
     req.user = findUser;
     next();
   } catch (error) {
+    console.error(error);
     return res.status(500).json({ message: "Server error during validation" });
   }
 };

@@ -31,6 +31,7 @@ const login = async (req: Request, res: Response) => {
     });
   } catch (err) {
     const error = err as Error;
+    console.error(error);
     res.status(500).json({ error: error.message });
   }
 };
