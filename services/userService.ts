@@ -1,10 +1,21 @@
 import bcrypt from "bcryptjs";
 import fs from "fs";
 import jwt from "jsonwebtoken";
-import { KEYS, removeCached, setCached, TTL, getCached } from "../cache/userCache.ts";
-import { cloudinary } from "../config/cloudinary.ts";
-import { dbEcommerce } from "../config/db.ts";
-import type { AuthResponse, RegisterDTO, UpdateProfileDTO, User } from "../types/user.ts";
+import {
+  getCached,
+  KEYS,
+  removeCached,
+  setCached,
+  TTL,
+} from "../cache/userCache";
+import { cloudinary } from "../config/cloudinary";
+import { dbEcommerce } from "../config/db";
+import type {
+  AuthResponse,
+  RegisterDTO,
+  UpdateProfileDTO,
+  User,
+} from "../types/user";
 
 const generateToken = (user: User): string => {
   return jwt.sign(
