@@ -10,6 +10,8 @@ const KEYS = {
   userById: (id: string) => `user:${id}`,
   order: "order:all",
   orderById: (id: string) => `order:${id}`,
+  reviewById: (id: string) => `review:${id}`,
+  review: "review:all",
 };
 
 const TTL = {
@@ -22,6 +24,8 @@ const TTL = {
   categoryById: 600,
   cartById: 600,
   userById: 600,
+  reviewById: 600,
+  review: 300,
 };
 
 async function getCached(key: string) {
