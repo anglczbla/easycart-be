@@ -19,6 +19,7 @@ router.post(
 router.put(
   "/:id",
   authUser,
+  upload.single("image"),
   validateUpdateReview,
   reviewController.updateReview,
 );
