@@ -23,6 +23,6 @@ router.put(
   validateUpdateReview,
   reviewController.updateReview,
 );
-router.delete("/:id", authUser, reviewController.deleteReview);
+router.delete("/:id/:prodId", authUser, reviewController.deleteReview);
 
 export default router;

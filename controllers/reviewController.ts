@@ -8,7 +8,7 @@ const getReviewByProduct = async (req: Request, res: Response) => {
     const review = await reviewService.getReviewById(prodId);
     return res.status(200).json({
       message: "success fetch review",
-      data: review,
+      data: review || [],
     });
   } catch (err) {
     const error = err as Error;
