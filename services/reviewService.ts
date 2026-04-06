@@ -11,12 +11,14 @@ import { dbEcommerce } from "../config/db";
 import { Review } from "../types/review";
 
 const getReviewById = async (prodId: string): Promise<Review[]> => {
-  const cached = await getCached(KEYS.reviewById(prodId));
-  if (cached) return cached;
+  try {
+    const cached = await getCached(KEYS.reviewById(prodId));
+    if (cached) return cached;
 
-  const getReview = await dbEcommerce.many(
-    `SELECT 
+    const getReview = await dbEcommerce.many(
+      `SELECT 
       r.id,
+      r.user_id,
       r.product_id,
       r.comment,
       r.rating,
@@ -27,24 +29,30 @@ const getReviewById = async (prodId: string): Promise<Review[]> => {
      JOIN users u ON r.user_id = u.id
      JOIN products p ON r.product_id = p.id
      WHERE r.product_id = $1`,
-    [prodId],
-  );
+      [prodId],
+    );
 
-  if (!getReview) return [];
+    console.log(getReview);
 
-  const result = getReview.map((r: Review) => ({
-    id: r.id,
-    user_id: r.user_id,
-    rating: r.rating,
-    product_id: r.product_id,
-    comment: r.comment,
-    username: r.username,
-    product_name: r.product_name,
-    image: r.image,
-  }));
+    if (!getReview) return [];
 
-  await setCached(KEYS.reviewById(prodId), result, TTL.reviewById);
-  return result;
+    const result = getReview.map((r: Review) => ({
+      id: r.id,
+      user_id: r.user_id,
+      rating: r.rating,
+      product_id: r.product_id,
+      comment: r.comment,
+      username: r.username,
+      product_name: r.product_name,
+      image: r.image,
+    }));
+
+    await setCached(KEYS.reviewById(prodId), result, TTL.reviewById);
+    return result;
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
 };
 
 const createReview = async ({
