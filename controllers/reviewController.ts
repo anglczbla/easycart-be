@@ -75,9 +75,18 @@ const updateReview = async (req: Request, res: Response) => {
 const deleteReview = async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
-    const product_id = req.params.prodId as string;
+    const prodId = req.params.prodId as string;
+    const userId = req.userId;
 
-    const deletingReview = await reviewService.deleteReview(id, product_id);
+    if (!userId) {
+      return res.status(401).json({ message: "unauthorized" });
+    }
+
+    const deletingReview = await reviewService.deleteReview({
+      id,
+      prodId,
+      userId,
+    });
     return res.status(200).json({
       message: "success delete review",
       data: deletingReview,

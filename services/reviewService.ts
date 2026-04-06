@@ -82,10 +82,18 @@ const createReview = async ({
   return newReview;
 };
 
-const deleteReview = async (id: string, prodId: string) => {
+const deleteReview = async ({
+  id,
+  prodId,
+  userId,
+}: {
+  id: string;
+  prodId: string;
+  userId: string;
+}) => {
   const review = await dbEcommerce.oneOrNone(
-    "DELETE FROM reviews WHERE id = $1  RETURNING *",
-    [id],
+    "DELETE FROM reviews WHERE id = $1  AND user_id = $2 RETURNING *",
+    [id, userId],
   );
 
   if (review) {
