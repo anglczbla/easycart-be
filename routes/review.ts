@@ -10,7 +10,7 @@ const router = express.Router();
 
 router.get("/:prodId", authUser, reviewController.getReviewByProduct);
 router.post(
-  "/",
+  "/:prodId",
   authUser,
   upload.single("image"),
   validateCreateReview,
