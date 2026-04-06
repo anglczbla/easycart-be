@@ -1,6 +1,7 @@
 import express from "express";
 import reviewController from "../controllers/reviewController";
 import { authUser } from "../middleware/auth";
+import upload from "../middleware/multer";
 import {
   validateCreateReview,
   validateUpdateReview,
@@ -8,7 +9,13 @@ import {
 const router = express.Router();
 
 router.get("/:prodId", authUser, reviewController.getReviewByProduct);
-router.post("/", authUser, validateCreateReview, reviewController.createReview);
+router.post(
+  "/",
+  authUser,
+  upload.single("image"),
+  validateCreateReview,
+  reviewController.createReview,
+);
 router.put(
   "/:id",
   authUser,
