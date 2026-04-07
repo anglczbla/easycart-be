@@ -8,7 +8,11 @@ export const validateCreateReview = (
 ) => {
   const createReviewSchema = z.object({
     comment: z.string().optional(),
-    rating: z.coerce.number().int().min(1, "rating is required").max(5),
+    rating: z.coerce
+      .number()
+      .int()
+      .min(1, "rating is required")
+      .max(5, "rating max 5"),
     image: z.string().optional(),
     product_id: z.string().min(1, "product id is required"),
   });
@@ -31,7 +35,7 @@ export const validateUpdateReview = (
 ) => {
   const updateReviewSchema = z.object({
     comment: z.string().optional(),
-    rating: z.coerce.number().int().min(1).max(5).optional(),
+    rating: z.coerce.number().int().min(1).max(5, "rating max 5").optional(),
   });
 
   const parsed = updateReviewSchema.safeParse(req.body);

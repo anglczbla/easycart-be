@@ -70,6 +70,15 @@ const createReview = async ({
 }): Promise<Review> => {
   if (!comment) throw new Error("comment is required");
 
+  const existingReview = await dbEcommerce.oneOrNone(
+    `SELECT id FROM reviews WHERE user_id = $1 AND product_id = $2`,
+    [user_id, product_id],
+  );
+
+  if (existingReview) {
+    throw new Error("you can only write 1 comment for 1 specific product");
+  }
+
   let image = null;
   if (imageFile) {
     const result = await cloudinary.uploader.upload(imageFile.path, {
