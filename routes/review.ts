@@ -8,7 +8,7 @@ import {
 } from "../middleware/validation/reviewValidation";
 const router = express.Router();
 
-router.get("/:prodId", authUser, reviewController.getReviewByProduct);
+router.get("/:prodId", reviewController.getReviewByProduct);
 router.post(
   "/:prodId",
   authUser,
